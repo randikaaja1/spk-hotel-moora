@@ -1,0 +1,22 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: spk-hotel-moora-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: spk_hotel_moora_db
+      MYSQL_USER: moora_user
+      MYSQL_PASSWORD: moora_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - spk_hotel_moora_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "moora_user", "-pmoora_password"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  spk_hotel_moora_mysql_data:
