@@ -6,6 +6,7 @@ import (
 
 	"spk-hotel-moora-service-go/internal/config"
 	"spk-hotel-moora-service-go/internal/middleware"
+	"spk-hotel-moora-service-go/internal/modules/auth"
 	"spk-hotel-moora-service-go/internal/modules/health"
 	"spk-hotel-moora-service-go/internal/response"
 
@@ -27,10 +28,15 @@ func SetupRouter(db *sql.DB, cfg *config.Config) *gin.Engine {
 
 	healthHandler := health.NewHandler(db)
 
+	authRepository := auth.NewRepository(db)
+	authService := auth.NewService(authRepository, cfg)
+	authHandler := auth.NewHandler(authService)
+
 	health.RegisterRoutes(router, healthHandler)
 
 	api := router.Group("/api/v1")
 	health.RegisterRoutes(api, healthHandler)
+	auth.RegisterRoutes(api.Group("/auth"), authHandler, cfg)
 
 	router.NoRoute(func(c *gin.Context) {
 		response.Error(
