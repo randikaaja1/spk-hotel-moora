@@ -1,0 +1,12 @@
+CREATE TABLE IF NOT EXISTS criteria (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    code VARCHAR(20) NOT NULL UNIQUE,
+    name VARCHAR(100) NOT NULL,
+    attribute ENUM('benefit', 'cost') NOT NULL,
+    weight DECIMAL(8, 4) NOT NULL,
+    normalized_weight DECIMAL(10, 6) NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_criteria_attribute ON criteria(attribute);
