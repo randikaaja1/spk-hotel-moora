@@ -8,8 +8,10 @@ import {
   ListChecks,
   LogOut,
   Mountain,
-  Settings2,
-  SlidersHorizontal
+  Scale,
+  SlidersHorizontal,
+  UserRound,
+  Users
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Link, NavLink, useLocation } from "react-router-dom";
@@ -35,7 +37,8 @@ const adminSections: SidebarSection[] = [
     title: "Data Master",
     items: [
       { to: "/admin/hotels", label: "Hotel", icon: Building2 },
-      { to: "/admin/criteria", label: "Kriteria", icon: ClipboardList }
+      { to: "/admin/criteria", label: "Kriteria", icon: ClipboardList },
+      { to: "/admin/criteria/weights", label: "Bobot Kriteria", icon: Scale }
     ]
   },
   {
@@ -45,6 +48,13 @@ const adminSections: SidebarSection[] = [
   {
     title: "Hasil",
     items: [{ to: "/admin/moora?view=ranking", label: "Hasil Ranking", icon: BarChart3 }]
+  },
+  {
+    title: "Pengaturan",
+    items: [
+      { to: "/admin/users", label: "Pengguna", icon: Users },
+      { to: "/profile", label: "Profil", icon: UserRound }
+    ]
   }
 ];
 
@@ -59,6 +69,10 @@ const userSections: SidebarSection[] = [
   {
     title: "Hasil",
     items: [{ to: "/recommendations", label: "Hasil Ranking", icon: ListChecks }]
+  },
+  {
+    title: "Pengaturan",
+    items: [{ to: "/profile", label: "Profil", icon: UserRound }]
   }
 ];
 
@@ -81,7 +95,7 @@ export function Sidebar() {
         </span>
       </NavLink>
 
-      <nav className="mt-12 flex min-h-0 flex-1 flex-col gap-8 overflow-hidden">
+      <nav className="mt-10 flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto pr-1">
         {sections.map((section, index) => (
           <SidebarSectionGroup key={`${section.title ?? "main"}-${index}`} section={section} />
         ))}

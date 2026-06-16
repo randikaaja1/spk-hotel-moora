@@ -3,12 +3,15 @@ import { AppLayout } from "./components/layout/AppLayout";
 import { ProtectedRoute } from "./components/layout/ProtectedRoute";
 import { useAuth } from "./context/AuthContext";
 import { AdminCriteriaPage } from "./pages/admin/CriteriaPage";
+import { AdminCriteriaWeightsPage } from "./pages/admin/CriteriaWeightsPage";
 import { AdminDashboardPage } from "./pages/admin/DashboardPage";
 import { AdminHotelsPage } from "./pages/admin/HotelsPage";
 import { AdminMooraPage } from "./pages/admin/MooraPage";
+import { AdminUsersPage } from "./pages/admin/UsersPage";
 import { LandingPage } from "./pages/LandingPage";
 import { LoginPage } from "./pages/LoginPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
+import { ProfilePage } from "./pages/ProfilePage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { UserHotelsPage } from "./pages/user/HotelsPage";
 import { UserPreferencesPage } from "./pages/user/PreferencesPage";
@@ -27,7 +30,9 @@ export function App() {
           <Route element={<AdminDashboardPage />} path="/admin/dashboard" />
           <Route element={<AdminHotelsPage />} path="/admin/hotels" />
           <Route element={<AdminCriteriaPage />} path="/admin/criteria" />
+          <Route element={<AdminCriteriaWeightsPage />} path="/admin/criteria/weights" />
           <Route element={<AdminMooraPage />} path="/admin/moora" />
+          <Route element={<AdminUsersPage />} path="/admin/users" />
         </Route>
       </Route>
 
@@ -36,6 +41,12 @@ export function App() {
           <Route element={<UserHotelsPage />} path="/hotels" />
           <Route element={<UserPreferencesPage />} path="/preferences" />
           <Route element={<UserRecommendationsPage />} path="/recommendations" />
+        </Route>
+      </Route>
+
+      <Route element={<ProtectedRoute />} >
+        <Route element={<AppLayout />}>
+          <Route element={<ProfilePage />} path="/profile" />
         </Route>
       </Route>
 
