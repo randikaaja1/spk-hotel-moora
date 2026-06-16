@@ -1,10 +1,15 @@
 import { FormEvent, useState } from "react";
-import { UserPlus } from "lucide-react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
-import { Alert } from "../../components/ui/Alert";
-import { Button } from "../../components/ui/Button";
-import { Card } from "../../components/ui/Card";
-import { InputField } from "../../components/ui/FormField";
+import { Mail, UserPlus, UserRound } from "lucide-react";
+import { Navigate, useNavigate } from "react-router-dom";
+import {
+  AuthAlert,
+  AuthCard,
+  AuthFooterLink,
+  AuthPasswordInput,
+  AuthShell,
+  AuthSubmitButton,
+  AuthTextInput
+} from "../../components/auth/AuthLayout";
 import { useAuth } from "../../context/AuthContext";
 import { ApiRequestError } from "../../types/api";
 
@@ -15,6 +20,7 @@ export function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -42,42 +48,51 @@ export function RegisterPage() {
   }
 
   return (
-    <main className="auth-page">
-      <Card className="auth-card">
-        <span className="eyebrow">Akun User</span>
-        <h1>Daftar</h1>
-        <Alert message={message} variant="success" />
-        <Alert message={error} variant="error" />
-        <form className="form-grid" onSubmit={handleSubmit}>
-          <InputField
+    <AuthShell>
+      <AuthCard
+        description="Buat akun pengguna untuk mulai memilih preferensi dan melihat rekomendasi hotel."
+        kicker="Daftar Akun"
+        title="Mulai gunakan sistem"
+      >
+        <form className="mt-7 space-y-4" onSubmit={handleSubmit}>
+          <AuthAlert message={message} variant="success" />
+          <AuthAlert message={error} variant="error" />
+          <AuthTextInput
+            autoComplete="name"
+            icon={<UserRound className="h-5 w-5" />}
             label="Nama"
             onChange={(event) => setName(event.target.value)}
+            placeholder="Nama lengkap"
             required
             value={name}
           />
-          <InputField
+          <AuthTextInput
+            autoComplete="email"
+            icon={<Mail className="h-5 w-5" />}
             label="Email"
             onChange={(event) => setEmail(event.target.value)}
+            placeholder="nama@contoh.com"
             required
             type="email"
             value={email}
           />
-          <InputField
+          <AuthPasswordInput
+            autoComplete="new-password"
             label="Password"
             minLength={6}
             onChange={(event) => setPassword(event.target.value)}
+            onToggleVisibility={() => setShowPassword((current) => !current)}
+            placeholder="Minimal 6 karakter"
             required
-            type="password"
             value={password}
+            visible={showPassword}
           />
-          <Button disabled={submitting} icon={<UserPlus size={18} />} type="submit">
+          <AuthSubmitButton disabled={submitting} icon={<UserPlus className="h-5 w-5" />}>
             {submitting ? "Memproses" : "Daftar"}
-          </Button>
+          </AuthSubmitButton>
         </form>
-        <p className="auth-footnote">
-          Sudah punya akun? <Link to="/login">Masuk</Link>
-        </p>
-      </Card>
-    </main>
+        <AuthFooterLink label="Masuk" prompt="Sudah punya akun?" to="/login" />
+      </AuthCard>
+    </AuthShell>
   );
 }
