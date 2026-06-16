@@ -1,63 +1,96 @@
 import { useEffect, useState } from "react";
-import { BarChart3, Building2, ListChecks, Users } from "lucide-react";
-import { Card } from "../../../components/ui/Card";
+import { AlertCircle } from "lucide-react";
 import { LoadingState } from "../../../components/ui/LoadingState";
-import { PageHeader } from "../../../components/ui/PageHeader";
-import { StatCard } from "../../../components/ui/StatCard";
+import { useAuth } from "../../../context/AuthContext";
 import { getDashboardSummary } from "../../../services/dashboardService";
+import {
+  calculateRecommendation,
+  getLatestRecommendation
+} from "../../../services/recommendationService";
 import type { DashboardSummary } from "../../../types/dashboard";
-import { formatDateTime, formatNumber } from "../../../utils/formatters";
+import type { RecommendationItem } from "../../../types/recommendation";
+import {
+  DashboardHero,
+  DashboardMooraPanel,
+  DashboardRecommendationGrid,
+  DashboardStats
+} from "./components";
 
 // AdminDashboardPage menampilkan ringkasan utama untuk admin.
 export function AdminDashboardPage() {
+  const { user } = useAuth();
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [results, setResults] = useState<RecommendationItem[]>([]);
+  const [latestCreatedAt, setLatestCreatedAt] = useState("");
   const [loading, setLoading] = useState(true);
+  const [processing, setProcessing] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    void loadSummary();
+    void loadDashboard();
   }, []);
 
-  // loadSummary mengambil data ringkasan dari backend dashboard.
-  async function loadSummary() {
+  // loadDashboard mengambil ringkasan admin dan hasil ranking terbaru.
+  async function loadDashboard() {
     setLoading(true);
     setError("");
 
     try {
-      setSummary(await getDashboardSummary());
+      const dashboardSummary = await getDashboardSummary();
+      setSummary(dashboardSummary);
     } catch {
       setError("Ringkasan dashboard belum dapat dimuat.");
+    }
+
+    try {
+      const latest = await getLatestRecommendation();
+      setResults(latest.results);
+      setLatestCreatedAt(latest.created_at);
+    } catch {
+      setResults([]);
+      setLatestCreatedAt("");
     } finally {
       setLoading(false);
     }
   }
 
+  // handleCalculate menjalankan ulang MOORA dan memperbarui isi dashboard.
+  async function handleCalculate() {
+    setProcessing(true);
+    setError("");
+
+    try {
+      const calculation = await calculateRecommendation();
+      setResults(calculation.results);
+      setLatestCreatedAt(new Date().toISOString());
+      setSummary(await getDashboardSummary());
+    } catch {
+      setError("Perhitungan MOORA belum berhasil dijalankan.");
+    } finally {
+      setProcessing(false);
+    }
+  }
+
   if (loading) {
-    return <LoadingState />;
+    return <LoadingState label="Memuat dashboard" />;
   }
 
   return (
-    <div className="stack">
-      <PageHeader title="Dashboard Admin" description={error || undefined} />
-      <div className="stats-grid">
-        <StatCard icon={<Building2 size={22} />} label="Total hotel" value={summary?.total_hotels ?? 0} />
-        <StatCard icon={<ListChecks size={22} />} label="Total kriteria" value={summary?.total_criteria ?? 0} />
-        <StatCard icon={<Users size={22} />} label="Total user" value={summary?.total_users ?? 0} />
-        <StatCard icon={<BarChart3 size={22} />} label="Rekomendasi" value={summary?.top_recommendation ? "Ada" : "Kosong"} />
-      </div>
-
-      <Card>
-        <h2>Rekomendasi Tertinggi</h2>
-        {summary?.top_recommendation ? (
-          <div className="top-result">
-            <strong>{summary.top_recommendation.hotel_name}</strong>
-            <span>Yi {formatNumber(summary.top_recommendation.preference_value, 5)}</span>
-            <span>{formatDateTime(summary.top_recommendation.created_at)}</span>
-          </div>
-        ) : (
-          <p className="muted">Belum ada hasil rekomendasi tersimpan.</p>
-        )}
-      </Card>
+    <div className="space-y-5">
+      <DashboardHero name={user?.name || "Admin"} />
+      {error ? (
+        <div className="flex items-center gap-3 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+          <AlertCircle className="h-5 w-5" />
+          {error}
+        </div>
+      ) : null}
+      <DashboardStats results={results} summary={summary} />
+      <DashboardRecommendationGrid results={results} />
+      <DashboardMooraPanel
+        latestCreatedAt={latestCreatedAt}
+        onCalculate={() => void handleCalculate()}
+        processing={processing}
+      />
     </div>
   );
 }
