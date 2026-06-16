@@ -9,8 +9,8 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="empty-state">
-      <strong>{title}</strong>
+    <div className="flex min-h-[180px] flex-col items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50/70 px-5 text-center">
+      <strong className="text-sm font-bold text-slate-600">{title}</strong>
       {action ? <div>{action}</div> : null}
     </div>
   );

@@ -61,7 +61,7 @@ export function CriterionForm({
   }
 
   return (
-    <form className="form-grid" onSubmit={handleSubmit}>
+    <form className="grid gap-4" onSubmit={handleSubmit}>
       <InputField
         label="Kode"
         onChange={(event) => updateField("code", event.target.value)}
@@ -94,7 +94,7 @@ export function CriterionForm({
         type="number"
         value={form.weight}
       />
-      <div className="form-actions">
+      <div className="flex flex-wrap justify-end gap-3">
         {onCancel ? (
           <Button onClick={onCancel} variant="secondary">
             Batal

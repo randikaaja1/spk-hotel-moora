@@ -88,7 +88,7 @@ export function AdminHotelsPage() {
   }
 
   return (
-    <div className="stack">
+    <div className="space-y-5">
       <PageHeader
         action={
           <Button icon={<Plus size={18} />} onClick={() => setEditingHotel(null)}>
@@ -100,9 +100,16 @@ export function AdminHotelsPage() {
       <Alert message={message} variant="success" />
       <Alert message={error} variant="error" />
 
-      <div className="split-grid">
+      <div className="grid items-start gap-5 xl:grid-cols-[minmax(320px,0.78fr)_minmax(0,1.35fr)]">
         <Card>
-          <h2>{editingHotel ? "Ubah Hotel" : "Tambah Hotel"}</h2>
+          <div className="mb-5">
+            <h2 className="text-lg font-bold text-[#0a2a55]">
+              {editingHotel ? "Ubah Hotel" : "Tambah Hotel"}
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Masukkan nilai hotel yang akan dipakai dalam perhitungan MOORA.
+            </p>
+          </div>
           <HotelForm
             initialData={editingHotel}
             onCancel={editingHotel ? () => setEditingHotel(null) : undefined}
@@ -111,8 +118,13 @@ export function AdminHotelsPage() {
           />
         </Card>
 
-        <Card className="wide-card">
-          <h2>Daftar Hotel</h2>
+        <Card className="min-w-0">
+          <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-lg font-bold text-[#0a2a55]">Daftar Hotel</h2>
+              <p className="mt-1 text-sm text-slate-500">{hotels.length} hotel tersimpan</p>
+            </div>
+          </div>
           {loading ? (
             <LoadingState />
           ) : hotels.length === 0 ? (
@@ -134,8 +146,10 @@ export function AdminHotelsPage() {
                   {hotels.map((hotel) => (
                     <tr key={hotel.id}>
                       <td>
-                        <strong>{hotel.name}</strong>
-                        <span className="table-note">{hotel.description || "-"}</span>
+                        <strong className="block font-bold text-[#0a2a55]">{hotel.name}</strong>
+                        <span className="mt-1 block max-w-[320px] text-xs leading-5 text-slate-500">
+                          {hotel.description || "-"}
+                        </span>
                       </td>
                       <td>{formatCurrency(hotel.price)}</td>
                       <td>
@@ -144,11 +158,21 @@ export function AdminHotelsPage() {
                       <td>{formatNumber(hotel.accessibility, 1)}</td>
                       <td>{formatNumber(hotel.distance_km, 1)} km</td>
                       <td>
-                        <div className="row-actions">
-                          <button onClick={() => setEditingHotel(hotel)} title="Ubah" type="button">
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            className="grid h-9 w-9 place-items-center rounded-lg border-0 bg-blue-50 text-blue-700 transition hover:bg-blue-100"
+                            onClick={() => setEditingHotel(hotel)}
+                            title="Ubah"
+                            type="button"
+                          >
                             <Pencil size={16} />
                           </button>
-                          <button onClick={() => void handleDelete(hotel.id)} title="Hapus" type="button">
+                          <button
+                            className="grid h-9 w-9 place-items-center rounded-lg border-0 bg-red-50 text-red-600 transition hover:bg-red-100"
+                            onClick={() => void handleDelete(hotel.id)}
+                            title="Hapus"
+                            type="button"
+                          >
                             <Trash2 size={16} />
                           </button>
                         </div>

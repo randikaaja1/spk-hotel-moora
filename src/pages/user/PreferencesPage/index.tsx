@@ -83,56 +83,67 @@ export function UserPreferencesPage() {
   }
 
   return (
-    <div className="stack">
-      <PageHeader title="Preferensi Hotel" />
+    <div className="space-y-5">
+      <PageHeader
+        title="Preferensi Hotel"
+        description="Simpan batas kebutuhan agar hasil rekomendasi lebih dekat dengan pilihan Anda."
+      />
       <Alert message={message} variant="success" />
       <Alert message={error} variant="error" />
 
-      <Card className="narrow-card">
-        <form className="form-grid" onSubmit={handleSubmit}>
-          <InputField
-            label="Budget maksimal"
-            min={0}
-            onChange={(event) => updateField("max_budget", event.target.value)}
-            type="number"
-            value={form.max_budget ?? ""}
-          />
-          <InputField
-            label="Rating minimum"
-            max={5}
-            min={0}
-            onChange={(event) => updateField("min_rating", event.target.value)}
-            step="0.1"
-            type="number"
-            value={form.min_rating ?? ""}
-          />
-          <InputField
-            label="Aksesibilitas minimum"
-            max={5}
-            min={0}
-            onChange={(event) => updateField("min_accessibility", event.target.value)}
-            step="0.1"
-            type="number"
-            value={form.min_accessibility ?? ""}
-          />
-          <InputField
-            label="Jarak maksimal"
-            min={0}
-            onChange={(event) => updateField("max_distance", event.target.value)}
-            step="0.1"
-            type="number"
-            value={form.max_distance ?? ""}
-          />
-          <InputField
-            label="View minimum"
-            max={5}
-            min={0}
-            onChange={(event) => updateField("min_view", event.target.value)}
-            step="0.1"
-            type="number"
-            value={form.min_view ?? ""}
-          />
-          <div className="form-actions">
+      <Card className="max-w-3xl">
+        <div className="mb-5">
+          <h2 className="text-lg font-bold text-[#0a2a55]">Filter Kebutuhan</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Kosongkan field yang tidak ingin dipakai sebagai batas rekomendasi.
+          </p>
+        </div>
+        <form className="grid gap-4" onSubmit={handleSubmit}>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <InputField
+              label="Budget maksimal"
+              min={0}
+              onChange={(event) => updateField("max_budget", event.target.value)}
+              type="number"
+              value={form.max_budget ?? ""}
+            />
+            <InputField
+              label="Rating minimum"
+              max={5}
+              min={0}
+              onChange={(event) => updateField("min_rating", event.target.value)}
+              step="0.1"
+              type="number"
+              value={form.min_rating ?? ""}
+            />
+            <InputField
+              label="Aksesibilitas minimum"
+              max={5}
+              min={0}
+              onChange={(event) => updateField("min_accessibility", event.target.value)}
+              step="0.1"
+              type="number"
+              value={form.min_accessibility ?? ""}
+            />
+            <InputField
+              label="Jarak maksimal"
+              min={0}
+              onChange={(event) => updateField("max_distance", event.target.value)}
+              step="0.1"
+              type="number"
+              value={form.max_distance ?? ""}
+            />
+            <InputField
+              label="View minimum"
+              max={5}
+              min={0}
+              onChange={(event) => updateField("min_view", event.target.value)}
+              step="0.1"
+              type="number"
+              value={form.min_view ?? ""}
+            />
+          </div>
+          <div className="flex justify-end">
             <Button disabled={submitting} icon={<Save size={18} />} type="submit">
               {submitting ? "Menyimpan" : "Simpan"}
             </Button>

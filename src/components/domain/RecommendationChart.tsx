@@ -18,7 +18,7 @@ export function RecommendationChart({ results }: { results: RecommendationItem[]
   }));
 
   return (
-    <div className="chart-box">
+    <div className="min-h-[320px] w-full">
       <ResponsiveContainer height={320} width="100%">
         <BarChart data={data} margin={{ top: 12, right: 12, left: 0, bottom: 24 }}>
           <CartesianGrid stroke="#dbeafe" vertical={false} />

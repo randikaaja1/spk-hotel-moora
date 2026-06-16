@@ -88,7 +88,7 @@ export function AdminCriteriaPage() {
   }
 
   return (
-    <div className="stack">
+    <div className="space-y-5">
       <PageHeader
         action={
           <Button icon={<Plus size={18} />} onClick={() => setEditingCriterion(null)}>
@@ -100,9 +100,16 @@ export function AdminCriteriaPage() {
       <Alert message={message} variant="success" />
       <Alert message={error} variant="error" />
 
-      <div className="split-grid">
+      <div className="grid items-start gap-5 xl:grid-cols-[minmax(320px,0.78fr)_minmax(0,1.35fr)]">
         <Card>
-          <h2>{editingCriterion ? "Ubah Kriteria" : "Tambah Kriteria"}</h2>
+          <div className="mb-5">
+            <h2 className="text-lg font-bold text-[#0a2a55]">
+              {editingCriterion ? "Ubah Kriteria" : "Tambah Kriteria"}
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Atur kode, atribut, dan bobot kriteria untuk metode MOORA.
+            </p>
+          </div>
           <CriterionForm
             initialData={editingCriterion}
             onCancel={editingCriterion ? () => setEditingCriterion(null) : undefined}
@@ -111,8 +118,11 @@ export function AdminCriteriaPage() {
           />
         </Card>
 
-        <Card className="wide-card">
-          <h2>Daftar Kriteria</h2>
+        <Card className="min-w-0">
+          <div className="mb-5">
+            <h2 className="text-lg font-bold text-[#0a2a55]">Daftar Kriteria</h2>
+            <p className="mt-1 text-sm text-slate-500">{criteria.length} kriteria aktif</p>
+          </div>
           {loading ? (
             <LoadingState />
           ) : criteria.length === 0 ? (
@@ -134,7 +144,7 @@ export function AdminCriteriaPage() {
                   {criteria.map((criterion) => (
                     <tr key={criterion.id}>
                       <td>
-                        <strong>{criterion.code}</strong>
+                        <strong className="font-bold text-[#0a2a55]">{criterion.code}</strong>
                       </td>
                       <td>{criterion.name}</td>
                       <td>
@@ -145,11 +155,21 @@ export function AdminCriteriaPage() {
                       <td>{formatNumber(criterion.weight, 2)}</td>
                       <td>{formatNumber(criterion.normalized_weight, 4)}</td>
                       <td>
-                        <div className="row-actions">
-                          <button onClick={() => setEditingCriterion(criterion)} title="Ubah" type="button">
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            className="grid h-9 w-9 place-items-center rounded-lg border-0 bg-blue-50 text-blue-700 transition hover:bg-blue-100"
+                            onClick={() => setEditingCriterion(criterion)}
+                            title="Ubah"
+                            type="button"
+                          >
                             <Pencil size={16} />
                           </button>
-                          <button onClick={() => void handleDelete(criterion.id)} title="Hapus" type="button">
+                          <button
+                            className="grid h-9 w-9 place-items-center rounded-lg border-0 bg-red-50 text-red-600 transition hover:bg-red-100"
+                            onClick={() => void handleDelete(criterion.id)}
+                            title="Hapus"
+                            type="button"
+                          >
                             <Trash2 size={16} />
                           </button>
                         </div>

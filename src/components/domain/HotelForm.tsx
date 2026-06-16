@@ -65,7 +65,7 @@ export function HotelForm({
   }
 
   return (
-    <form className="form-grid" onSubmit={handleSubmit}>
+    <form className="grid gap-4" onSubmit={handleSubmit}>
       <InputField
         label="Nama hotel"
         onChange={(event) => updateField("name", event.target.value)}
@@ -135,7 +135,7 @@ export function HotelForm({
         rows={4}
         value={form.description}
       />
-      <div className="form-actions">
+      <div className="flex flex-wrap justify-end gap-3">
         {onCancel ? (
           <Button onClick={onCancel} variant="secondary">
             Batal

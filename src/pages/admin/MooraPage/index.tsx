@@ -59,10 +59,10 @@ export function AdminMooraPage() {
   }
 
   return (
-    <div className="stack">
+    <div className="space-y-5">
       <PageHeader
         action={
-          <div className="button-row">
+          <div className="flex flex-wrap gap-3">
             <Button icon={<RotateCcw size={18} />} onClick={() => void loadLatest()} variant="secondary">
               Latest
             </Button>
@@ -81,16 +81,26 @@ export function AdminMooraPage() {
       ) : results.length === 0 ? (
         <EmptyState title="Belum ada hasil ranking." />
       ) : (
-        <>
+        <div className="grid gap-5">
           <Card>
-            <h2>Grafik Ranking</h2>
+            <div className="mb-5">
+              <h2 className="text-lg font-bold text-[#0a2a55]">Grafik Ranking</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Visualisasi nilai preferensi hotel berdasarkan hasil MOORA terbaru.
+              </p>
+            </div>
             <RecommendationChart results={results} />
           </Card>
           <Card>
-            <h2>Tabel Ranking</h2>
+            <div className="mb-5">
+              <h2 className="text-lg font-bold text-[#0a2a55]">Tabel Ranking</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Urutan lengkap hotel dari nilai preferensi tertinggi.
+              </p>
+            </div>
             <RecommendationTable results={results} />
           </Card>
-        </>
+        </div>
       )}
     </div>
   );

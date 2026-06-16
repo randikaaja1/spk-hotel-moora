@@ -34,9 +34,15 @@ export function UserHotelsPage() {
   }
 
   return (
-    <div className="stack">
+    <div className="space-y-5">
       <PageHeader title="Daftar Hotel" description={error || undefined} />
       <Card>
+        <div className="mb-5">
+          <h2 className="text-lg font-bold text-[#0a2a55]">Hotel Tersedia</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Bandingkan data hotel sebelum menentukan preferensi rekomendasi.
+          </p>
+        </div>
         {loading ? (
           <LoadingState />
         ) : hotels.length === 0 ? (
@@ -59,8 +65,10 @@ export function UserHotelsPage() {
                 {hotels.map((hotel) => (
                   <tr key={hotel.id}>
                     <td>
-                      <strong>{hotel.name}</strong>
-                      <span className="table-note">{hotel.description || "-"}</span>
+                      <strong className="block font-bold text-[#0a2a55]">{hotel.name}</strong>
+                      <span className="mt-1 block max-w-[320px] text-xs leading-5 text-slate-500">
+                        {hotel.description || "-"}
+                      </span>
                     </td>
                     <td>{formatCurrency(hotel.price)}</td>
                     <td>
