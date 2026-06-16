@@ -8,7 +8,7 @@ export function Topbar() {
   const roleLabel = user?.role === "admin" ? "Administrator" : "Pengguna";
 
   return (
-    <header className="flex h-[88px] shrink-0 items-center justify-between border-b border-slate-200/80 bg-white/95 px-5 shadow-sm sm:px-7 lg:px-8">
+    <header className="sticky top-0 z-20 flex h-[88px] shrink-0 items-center justify-between border-b border-slate-200/80 bg-white/95 px-5 shadow-sm backdrop-blur sm:px-7 lg:px-8">
       <button
         aria-label="Buka menu"
         className="flex h-11 w-11 items-center justify-center rounded-lg border-0 bg-transparent text-[#0a2a55] transition hover:bg-blue-50"

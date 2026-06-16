@@ -82,7 +82,7 @@ export function Sidebar() {
   const sections = user?.role === "admin" ? adminSections : userSections;
 
   return (
-    <aside className="hidden h-screen min-h-0 flex-col border-r border-slate-200/80 bg-white/95 px-5 py-7 shadow-[18px_0_50px_rgba(10,42,85,0.04)] lg:flex">
+    <aside className="sticky top-0 hidden h-screen min-h-0 flex-col border-r border-slate-200/80 bg-white/95 px-5 py-7 shadow-[18px_0_50px_rgba(10,42,85,0.04)] lg:flex">
       <NavLink className="flex items-center gap-3 px-3" to={getHomePath(user?.role)}>
         <Mountain className="h-9 w-9 text-[#c7902e]" strokeWidth={1.7} />
         <span className="flex flex-col">
