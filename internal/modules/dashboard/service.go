@@ -2,7 +2,6 @@ package dashboard
 
 import (
 	"context"
-	"errors"
 
 	"spk-hotel-moora-service-go/internal/modules/criteria"
 	"spk-hotel-moora-service-go/internal/modules/hotels"
@@ -55,12 +54,8 @@ func (s *Service) GetSummary(ctx context.Context) (*SummaryResponse, error) {
 	}
 
 	topResult, err := s.recommendationRepository.FindTopResult(ctx)
-	if errors.Is(err, recommendations.ErrRecommendationNotFound) {
-		return response, nil
-	}
-
 	if err != nil {
-		return nil, err
+		return response, nil
 	}
 
 	response.TopRecommendation = &TopRecommendationResponse{

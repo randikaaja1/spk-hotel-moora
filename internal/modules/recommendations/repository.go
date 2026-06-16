@@ -33,7 +33,7 @@ func (r *Repository) SaveResults(ctx context.Context, userID int64, calculationT
 
 	query := `
 		INSERT INTO recommendation_results (
-			user_id, hotel_id, preference_value, rank, calculation_type, created_at
+			user_id, hotel_id, preference_value, `rank`, calculation_type, created_at
 		)
 		VALUES (?, ?, ?, ?, ?, ?)
 	`
@@ -67,7 +67,7 @@ func (r *Repository) FindLatest(ctx context.Context, userID int64, calculationTy
 		SELECT
 			r.calculation_type,
 			r.created_at,
-			r.rank,
+			r.`rank`,
 			r.preference_value,
 			h.id,
 			h.name,
@@ -89,7 +89,7 @@ func (r *Repository) FindLatest(ctx context.Context, userID int64, calculationTy
 				FROM recommendation_results
 				WHERE user_id = ? AND calculation_type = ?
 			)
-		ORDER BY r.rank ASC
+		ORDER BY r.`rank` ASC
 	`
 
 	rows, err := r.db.QueryContext(ctx, query, userID, calculationType, userID, calculationType)
@@ -141,7 +141,7 @@ func (r *Repository) FindTopResult(ctx context.Context) (*StoredResult, error) {
 		SELECT
 			r.calculation_type,
 			r.created_at,
-			r.rank,
+			r.`rank`,
 			r.preference_value,
 			h.id,
 			h.name,
