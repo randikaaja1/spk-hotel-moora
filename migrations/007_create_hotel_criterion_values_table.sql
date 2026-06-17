@@ -28,5 +28,6 @@ SELECT
     END AS value
 FROM hotels h
 CROSS JOIN criteria c
+WHERE 1 = 1
 ON DUPLICATE KEY UPDATE
     value = VALUES(value);
