@@ -13,6 +13,7 @@ import (
 	"spk-hotel-moora-service-go/internal/modules/hotels"
 	"spk-hotel-moora-service-go/internal/modules/preferences"
 	"spk-hotel-moora-service-go/internal/modules/recommendations"
+	"spk-hotel-moora-service-go/internal/modules/users"
 	"spk-hotel-moora-service-go/internal/response"
 
 	"github.com/gin-gonic/gin"
@@ -49,6 +50,10 @@ func SetupRouter(db *sql.DB, cfg *config.Config) *gin.Engine {
 	preferenceService := preferences.NewService(preferenceRepository)
 	preferenceHandler := preferences.NewHandler(preferenceService)
 
+	userRepository := users.NewRepository(db)
+	userService := users.NewService(userRepository)
+	userHandler := users.NewHandler(userService)
+
 	recommendationRepository := recommendations.NewRepository(db)
 	recommendationService := recommendations.NewService(
 		recommendationRepository,
@@ -77,6 +82,7 @@ func SetupRouter(db *sql.DB, cfg *config.Config) *gin.Engine {
 	preferences.RegisterRoutes(api.Group("/preferences"), preferenceHandler, cfg)
 	recommendations.RegisterRoutes(api.Group("/recommendations"), recommendationHandler, cfg)
 	dashboard.RegisterRoutes(api.Group("/dashboard"), dashboardHandler, cfg)
+	users.RegisterRoutes(api.Group("/users"), userHandler, cfg)
 
 	router.NoRoute(func(c *gin.Context) {
 		response.Error(

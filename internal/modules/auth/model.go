@@ -13,6 +13,7 @@ type User struct {
 	Email        string
 	PasswordHash string
 	Role         string
+	IsActive     bool
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 }
@@ -22,6 +23,7 @@ type UserResponse struct {
 	Name      string    `json:"name"`
 	Email     string    `json:"email"`
 	Role      string    `json:"role"`
+	IsActive  bool      `json:"is_active"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
@@ -49,6 +51,7 @@ func (u *User) ToResponse() UserResponse {
 		Name:      u.Name,
 		Email:     u.Email,
 		Role:      u.Role,
+		IsActive:  u.IsActive,
 		CreatedAt: u.CreatedAt,
 		UpdatedAt: u.UpdatedAt,
 	}

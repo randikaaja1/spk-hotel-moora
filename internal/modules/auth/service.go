@@ -53,6 +53,7 @@ func (s *Service) Register(ctx context.Context, request RegisterRequest) (*UserR
 		Email:        email,
 		PasswordHash: string(passwordHash),
 		Role:         RoleUser,
+		IsActive:     true,
 	}
 
 	if err := s.repository.CreateUser(ctx, user); err != nil {
@@ -89,6 +90,10 @@ func (s *Service) Login(ctx context.Context, request LoginRequest) (*LoginRespon
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
 		return nil, ErrInvalidCredentials
+	}
+
+	if !user.IsActive {
+		return nil, ErrUserInactive
 	}
 
 	token, err := security.GenerateToken(user.ID, user.Email, user.Role, s.cfg)

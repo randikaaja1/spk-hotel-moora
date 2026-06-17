@@ -142,6 +142,15 @@ func (h *Handler) handleError(c *gin.Context, err error) {
 			[]string{err.Error()},
 		)
 
+	case errors.Is(err, ErrUserInactive):
+		response.Error(
+			c,
+			http.StatusForbidden,
+			"USER_INACTIVE",
+			"User account is inactive",
+			[]string{err.Error()},
+		)
+
 	case errors.Is(err, ErrUserNotFound):
 		response.Error(
 			c,

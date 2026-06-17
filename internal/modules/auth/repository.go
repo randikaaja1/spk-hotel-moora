@@ -21,11 +21,11 @@ func NewRepository(db *sql.DB) *Repository {
 // CreateUser menyimpan user baru ke database.
 func (r *Repository) CreateUser(ctx context.Context, user *User) error {
 	query := `
-		INSERT INTO users (name, email, password_hash, role)
-		VALUES (?, ?, ?, ?)
+		INSERT INTO users (name, email, password_hash, role, is_active)
+		VALUES (?, ?, ?, ?, ?)
 	`
 
-	result, err := r.db.ExecContext(ctx, query, user.Name, user.Email, user.PasswordHash, user.Role)
+	result, err := r.db.ExecContext(ctx, query, user.Name, user.Email, user.PasswordHash, user.Role, user.IsActive)
 	if err != nil {
 		return fmt.Errorf("create user: %w", err)
 	}
@@ -43,7 +43,7 @@ func (r *Repository) CreateUser(ctx context.Context, user *User) error {
 // FindByEmail mencari user berdasarkan email.
 func (r *Repository) FindByEmail(ctx context.Context, email string) (*User, error) {
 	query := `
-		SELECT id, name, email, password_hash, role, created_at, updated_at
+		SELECT id, name, email, password_hash, role, is_active, created_at, updated_at
 		FROM users
 		WHERE email = ?
 		LIMIT 1
@@ -57,6 +57,7 @@ func (r *Repository) FindByEmail(ctx context.Context, email string) (*User, erro
 		&user.Email,
 		&user.PasswordHash,
 		&user.Role,
+		&user.IsActive,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
@@ -75,7 +76,7 @@ func (r *Repository) FindByEmail(ctx context.Context, email string) (*User, erro
 // FindByID mencari user berdasarkan id dari token.
 func (r *Repository) FindByID(ctx context.Context, id int64) (*User, error) {
 	query := `
-		SELECT id, name, email, password_hash, role, created_at, updated_at
+		SELECT id, name, email, password_hash, role, is_active, created_at, updated_at
 		FROM users
 		WHERE id = ?
 		LIMIT 1
@@ -89,6 +90,7 @@ func (r *Repository) FindByID(ctx context.Context, id int64) (*User, error) {
 		&user.Email,
 		&user.PasswordHash,
 		&user.Role,
+		&user.IsActive,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
