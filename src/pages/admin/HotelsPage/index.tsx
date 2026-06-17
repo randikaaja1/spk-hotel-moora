@@ -9,18 +9,21 @@ import { EmptyState } from "../../../components/ui/EmptyState";
 import { LoadingState } from "../../../components/ui/LoadingState";
 import { PageHeader } from "../../../components/ui/PageHeader";
 import { TableShell } from "../../../components/ui/TableShell";
+import { getCriteria } from "../../../services/criterionService";
 import {
   createHotel,
   deleteHotel,
   getHotels,
   updateHotel
 } from "../../../services/hotelService";
+import type { Criterion } from "../../../types/criterion";
 import type { Hotel, SaveHotelPayload } from "../../../types/hotel";
 import { formatCurrency, formatNumber } from "../../../utils/formatters";
 
 // AdminHotelsPage mengelola CRUD data hotel sebagai alternatif MOORA.
 export function AdminHotelsPage() {
   const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [criteria, setCriteria] = useState<Criterion[]>([]);
   const [editingHotel, setEditingHotel] = useState<Hotel | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -29,16 +32,18 @@ export function AdminHotelsPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    void loadHotels();
+    void loadPageData();
   }, []);
 
-  // loadHotels mengambil daftar hotel terbaru dari backend.
-  async function loadHotels() {
+  // loadPageData mengambil daftar hotel dan kriteria aktif dari backend.
+  async function loadPageData() {
     setLoading(true);
     setError("");
 
     try {
-      setHotels(await getHotels());
+      const [hotelItems, criterionItems] = await Promise.all([getHotels(), getCriteria()]);
+      setHotels(hotelItems);
+      setCriteria(criterionItems);
     } catch {
       setError("Data hotel belum dapat dimuat.");
     } finally {
@@ -63,7 +68,7 @@ export function AdminHotelsPage() {
 
       setEditingHotel(null);
       setShowForm(false);
-      await loadHotels();
+      await loadPageData();
     } catch {
       setError("Data hotel belum berhasil disimpan.");
     } finally {
@@ -83,7 +88,7 @@ export function AdminHotelsPage() {
     try {
       await deleteHotel(id);
       setMessage("Hotel berhasil dihapus.");
-      await loadHotels();
+      await loadPageData();
     } catch {
       setError("Hotel belum berhasil dihapus.");
     }
@@ -141,10 +146,10 @@ export function AdminHotelsPage() {
               <thead>
                 <tr>
                   <th>Hotel</th>
-                  <th>Harga</th>
-                  <th>Fasilitas</th>
-                  <th>Aksesbilitas</th>
                   <th>Jarak</th>
+                  {criteria.map((criterion) => (
+                    <th key={criterion.id}>{criterion.code}</th>
+                  ))}
                   <th>Aksi</th>
                 </tr>
               </thead>
@@ -157,12 +162,12 @@ export function AdminHotelsPage() {
                         {hotel.description || "-"}
                       </span>
                     </td>
-                    <td>{formatCurrency(hotel.price)}</td>
-                    <td>
-                      <Badge tone="green">{formatNumber(hotel.rating_facility, 1)}</Badge>
-                    </td>
-                    <td>{formatNumber(hotel.accessibility, 1)}</td>
                     <td>{formatNumber(hotel.distance_km, 1)} km</td>
+                    {criteria.map((criterion) => (
+                      <td key={`${hotel.id}-${criterion.id}`}>
+                        {formatHotelCriterionValue(hotel, criterion)}
+                      </td>
+                    ))}
                     <td>
                       <div className="flex flex-wrap gap-2">
                         <button
@@ -221,6 +226,7 @@ export function AdminHotelsPage() {
               </button>
             </div>
             <HotelForm
+              criteria={criteria}
               initialData={editingHotel}
               onCancel={closeForm}
               onSubmit={handleSubmit}
@@ -231,4 +237,53 @@ export function AdminHotelsPage() {
       ) : null}
     </div>
   );
+}
+
+// formatHotelCriterionValue menampilkan nilai hotel sesuai kriteria aktif.
+function formatHotelCriterionValue(hotel: Hotel, criterion: Criterion) {
+  const value = resolveHotelCriterionValue(hotel, criterion);
+
+  if (isMoneyCriterion(criterion)) {
+    return formatCurrency(value);
+  }
+
+  if (isDistanceCriterion(criterion)) {
+    return `${formatNumber(value, 1)} km`;
+  }
+
+  if (criterion.attribute === "benefit") {
+    return <Badge tone="green">{formatNumber(value, 1)}</Badge>;
+  }
+
+  return formatNumber(value, 1);
+}
+
+// resolveHotelCriterionValue mengambil nilai dari response dinamis dengan fallback field lama.
+function resolveHotelCriterionValue(hotel: Hotel, criterion: Criterion) {
+  const storedValue = hotel.criterion_values?.find((item) => item.criterion_id === criterion.id);
+  if (storedValue) {
+    return storedValue.value;
+  }
+
+  const code = criterion.code.trim().toUpperCase();
+  const name = criterion.name.trim().toLowerCase();
+  if (code === "C1" || name.includes("biaya") || name.includes("harga")) return hotel.price;
+  if (code === "C2" || name.includes("fasilitas") || name.includes("rating")) return hotel.rating_facility;
+  if (code === "C3" || name.includes("akses")) return hotel.accessibility;
+  if (name.includes("jarak")) return hotel.distance_km;
+  if (code === "C4" || name.includes("lokasi")) return hotel.location_score;
+  if (code === "C5" || name.includes("view")) return hotel.view_score;
+
+  return 0;
+}
+
+// isMoneyCriterion mengenali kriteria biaya agar tampil sebagai Rupiah.
+function isMoneyCriterion(criterion: Criterion) {
+  const name = criterion.name.trim().toLowerCase();
+  return criterion.code.trim().toUpperCase() === "C1" || name.includes("biaya") || name.includes("harga");
+}
+
+// isDistanceCriterion mengenali kriteria jarak agar tampil dengan satuan km.
+function isDistanceCriterion(criterion: Criterion) {
+  return criterion.name.trim().toLowerCase().includes("jarak");
 }

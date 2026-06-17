@@ -5,13 +5,16 @@ import { EmptyState } from "../../../components/ui/EmptyState";
 import { LoadingState } from "../../../components/ui/LoadingState";
 import { PageHeader } from "../../../components/ui/PageHeader";
 import { TableShell } from "../../../components/ui/TableShell";
+import { getCriteria } from "../../../services/criterionService";
 import { getHotels } from "../../../services/hotelService";
+import type { Criterion } from "../../../types/criterion";
 import type { Hotel } from "../../../types/hotel";
 import { formatCurrency, formatNumber } from "../../../utils/formatters";
 
 // UserHotelsPage menampilkan daftar hotel yang dapat dipilih user.
 export function UserHotelsPage() {
   const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [criteria, setCriteria] = useState<Criterion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -25,7 +28,9 @@ export function UserHotelsPage() {
     setError("");
 
     try {
-      setHotels(await getHotels());
+      const [hotelItems, criterionItems] = await Promise.all([getHotels(), getCriteria()]);
+      setHotels(hotelItems);
+      setCriteria(criterionItems);
     } catch {
       setError("Data hotel belum dapat dimuat.");
     } finally {
@@ -53,12 +58,10 @@ export function UserHotelsPage() {
               <thead>
                 <tr>
                   <th>Hotel</th>
-                  <th>Harga</th>
-                  <th>Fasilitas</th>
-                  <th>Akses</th>
                   <th>Jarak</th>
-                  <th>Lokasi</th>
-                  <th>View</th>
+                  {criteria.map((criterion) => (
+                    <th key={criterion.id}>{criterion.code}</th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
@@ -70,14 +73,12 @@ export function UserHotelsPage() {
                         {hotel.description || "-"}
                       </span>
                     </td>
-                    <td>{formatCurrency(hotel.price)}</td>
-                    <td>
-                      <Badge tone="green">{formatNumber(hotel.rating_facility, 1)}</Badge>
-                    </td>
-                    <td>{formatNumber(hotel.accessibility, 1)}</td>
                     <td>{formatNumber(hotel.distance_km, 1)} km</td>
-                    <td>{formatNumber(hotel.location_score, 1)}</td>
-                    <td>{formatNumber(hotel.view_score, 1)}</td>
+                    {criteria.map((criterion) => (
+                      <td key={`${hotel.id}-${criterion.id}`}>
+                        {formatHotelCriterionValue(hotel, criterion)}
+                      </td>
+                    ))}
                   </tr>
                 ))}
               </tbody>
@@ -87,4 +88,53 @@ export function UserHotelsPage() {
       </Card>
     </div>
   );
+}
+
+// formatHotelCriterionValue menampilkan nilai hotel sesuai kriteria aktif.
+function formatHotelCriterionValue(hotel: Hotel, criterion: Criterion) {
+  const value = resolveHotelCriterionValue(hotel, criterion);
+
+  if (isMoneyCriterion(criterion)) {
+    return formatCurrency(value);
+  }
+
+  if (isDistanceCriterion(criterion)) {
+    return `${formatNumber(value, 1)} km`;
+  }
+
+  if (criterion.attribute === "benefit") {
+    return <Badge tone="green">{formatNumber(value, 1)}</Badge>;
+  }
+
+  return formatNumber(value, 1);
+}
+
+// resolveHotelCriterionValue mengambil nilai dari response dinamis dengan fallback field lama.
+function resolveHotelCriterionValue(hotel: Hotel, criterion: Criterion) {
+  const storedValue = hotel.criterion_values?.find((item) => item.criterion_id === criterion.id);
+  if (storedValue) {
+    return storedValue.value;
+  }
+
+  const code = criterion.code.trim().toUpperCase();
+  const name = criterion.name.trim().toLowerCase();
+  if (code === "C1" || name.includes("biaya") || name.includes("harga")) return hotel.price;
+  if (code === "C2" || name.includes("fasilitas") || name.includes("rating")) return hotel.rating_facility;
+  if (code === "C3" || name.includes("akses")) return hotel.accessibility;
+  if (name.includes("jarak")) return hotel.distance_km;
+  if (code === "C4" || name.includes("lokasi")) return hotel.location_score;
+  if (code === "C5" || name.includes("view")) return hotel.view_score;
+
+  return 0;
+}
+
+// isMoneyCriterion mengenali kriteria biaya agar tampil sebagai Rupiah.
+function isMoneyCriterion(criterion: Criterion) {
+  const name = criterion.name.trim().toLowerCase();
+  return criterion.code.trim().toUpperCase() === "C1" || name.includes("biaya") || name.includes("harga");
+}
+
+// isDistanceCriterion mengenali kriteria jarak agar tampil dengan satuan km.
+function isDistanceCriterion(criterion: Criterion) {
+  return criterion.name.trim().toLowerCase().includes("jarak");
 }

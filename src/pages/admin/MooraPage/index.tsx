@@ -5,10 +5,13 @@ import {
   BarChart3,
   Calculator,
   CheckCircle2,
+  Clock,
   Database,
+  ListChecks,
   RotateCcw,
   Sigma,
-  Table2
+  Table2,
+  Trophy
 } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { RecommendationChart } from "../../../components/domain/RecommendationChart";
@@ -32,7 +35,7 @@ import type {
   CriterionScore,
   RecommendationItem
 } from "../../../types/recommendation";
-import { formatCurrency, formatNumber } from "../../../utils/formatters";
+import { formatCurrency, formatDateTime, formatNumber } from "../../../utils/formatters";
 
 // AdminMooraPage memisahkan tampilan proses perhitungan dan hasil ranking MOORA.
 export function AdminMooraPage() {
@@ -218,6 +221,7 @@ function MooraProcessView() {
 // MooraResultView menampilkan output akhir ranking yang tersimpan atau baru dihitung.
 function MooraResultView() {
   const [results, setResults] = useState<RecommendationItem[]>([]);
+  const [latestCreatedAt, setLatestCreatedAt] = useState("");
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [message, setMessage] = useState("");
@@ -227,6 +231,14 @@ function MooraResultView() {
     void loadLatest();
   }, []);
 
+  const bestResult = results[0];
+  const scoreRows = useMemo(() => buildProcessRows(results), [results]);
+  const hasScoreDetail = results.some((item) => (item.scores?.length ?? 0) > 0);
+  const averagePreference =
+    results.length > 0
+      ? results.reduce((total, item) => total + item.preference_value, 0) / results.length
+      : 0;
+
   // loadLatest mengambil hasil perhitungan admin terakhir jika tersedia.
   async function loadLatest() {
     setLoading(true);
@@ -235,8 +247,10 @@ function MooraResultView() {
     try {
       const latest = await getLatestRecommendation();
       setResults(latest.results);
+      setLatestCreatedAt(latest.created_at);
     } catch {
       setResults([]);
+      setLatestCreatedAt("");
     } finally {
       setLoading(false);
     }
@@ -251,6 +265,7 @@ function MooraResultView() {
     try {
       const result = await calculateRecommendation();
       setResults(result.results);
+      setLatestCreatedAt(new Date().toISOString());
       setMessage("Perhitungan MOORA berhasil dijalankan.");
     } catch {
       setError("Perhitungan MOORA belum berhasil dijalankan.");
@@ -284,15 +299,127 @@ function MooraResultView() {
         <EmptyState title="Belum ada hasil ranking." />
       ) : (
         <div className="grid gap-5">
-          <Card>
-            <div className="mb-5">
-              <h2 className="text-lg font-bold text-[#0a2a55]">Grafik Ranking</h2>
-              <p className="mt-1 text-sm text-slate-500">
-                Visualisasi nilai preferensi hotel berdasarkan hasil MOORA terbaru.
-              </p>
-            </div>
-            <RecommendationChart results={results} />
-          </Card>
+          <div className="grid gap-4 md:grid-cols-4">
+            <ResultSummaryCard
+              description={
+                bestResult ? `Yi ${formatNumber(bestResult.preference_value, 5)}` : "Belum tersedia."
+              }
+              icon={<Trophy className="h-6 w-6" />}
+              label="Rekomendasi Terbaik"
+              tone="amber"
+              value={bestResult?.hotel.name ?? "-"}
+            />
+            <ResultSummaryCard
+              description="Alternatif yang masuk hasil akhir."
+              icon={<ListChecks className="h-6 w-6" />}
+              label="Total Ranking"
+              tone="blue"
+              value={`${results.length} Hotel`}
+            />
+            <ResultSummaryCard
+              description="Rata-rata nilai Yi seluruh hotel."
+              icon={<BarChart3 className="h-6 w-6" />}
+              label="Rata-rata Yi"
+              tone="amber"
+              value={formatNumber(averagePreference, 5)}
+            />
+            <ResultSummaryCard
+              description="Waktu hasil terakhir dimuat."
+              icon={<Clock className="h-6 w-6" />}
+              label="Terakhir Hitung"
+              tone="purple"
+              value={latestCreatedAt ? formatDateTime(latestCreatedAt) : "-"}
+            />
+          </div>
+
+          <div className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
+            <Card>
+              <div className="mb-5">
+                <h2 className="text-lg font-bold text-[#0a2a55]">Ringkasan Ranking</h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Lima hotel teratas dari hasil perhitungan MOORA terbaru.
+                </p>
+              </div>
+              <div className="space-y-3">
+                {results.slice(0, 5).map((item) => (
+                  <div
+                    className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50/70 p-3"
+                    key={`${item.rank}-${item.hotel.id}-summary`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={`grid h-10 w-10 shrink-0 place-items-center rounded-full text-sm font-black ${
+                          item.rank === 1
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-blue-50 text-blue-700"
+                        }`}
+                      >
+                        #{item.rank}
+                      </span>
+                      <div>
+                        <p className="font-bold text-[#0a2a55]">{item.hotel.name}</p>
+                        <p className="text-xs text-slate-500">
+                          Harga {formatCurrency(item.hotel.price)} | Rating{" "}
+                          {formatNumber(item.hotel.rating_facility, 1)}
+                        </p>
+                      </div>
+                    </div>
+                    <strong className="text-sm text-[#0a2a55]">
+                      {formatNumber(item.preference_value, 5)}
+                    </strong>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            <Card>
+              <div className="mb-5">
+                <h2 className="text-lg font-bold text-[#0a2a55]">Grafik Ranking</h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Visualisasi nilai preferensi hotel berdasarkan hasil MOORA terbaru.
+                </p>
+              </div>
+              <RecommendationChart results={results} />
+            </Card>
+          </div>
+
+          {hasScoreDetail ? (
+            <Card>
+              <div className="mb-5">
+                <h2 className="text-lg font-bold text-[#0a2a55]">Detail Nilai Akhir</h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Pembentuk nilai Yi dari total benefit dikurangi total cost.
+                </p>
+              </div>
+              <TableShell>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Rank</th>
+                      <th>Hotel</th>
+                      <th>Total Benefit</th>
+                      <th>Total Cost</th>
+                      <th>Yi</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {scoreRows.map((row) => (
+                      <tr key={`${row.hotelId}-result-detail`}>
+                        <td>#{row.rank}</td>
+                        <td>
+                          <strong className="font-bold text-[#0a2a55]">{row.hotelName}</strong>
+                        </td>
+                        <td>{formatNumber(row.totalBenefit, 6)}</td>
+                        <td>{formatNumber(row.totalCost, 6)}</td>
+                        <td>{formatNumber(row.preferenceValue, 6)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </TableShell>
+            </Card>
+          ) : null}
+
           <Card>
             <div className="mb-5">
               <h2 className="text-lg font-bold text-[#0a2a55]">Tabel Ranking</h2>
@@ -305,6 +432,41 @@ function MooraResultView() {
         </div>
       )}
     </div>
+  );
+}
+
+// ResultSummaryCard menampilkan angka penting dari hasil ranking MOORA.
+function ResultSummaryCard({
+  description,
+  icon,
+  label,
+  tone,
+  value
+}: {
+  description: string;
+  icon: ReactNode;
+  label: string;
+  tone: "blue" | "emerald" | "amber" | "purple";
+  value: string;
+}) {
+  const toneClass = {
+    blue: "bg-blue-50 text-blue-700",
+    emerald: "bg-emerald-50 text-emerald-700",
+    amber: "bg-amber-50 text-amber-700",
+    purple: "bg-violet-50 text-violet-700"
+  }[tone];
+
+  return (
+    <Card className="flex items-center gap-4">
+      <div className={`grid h-14 w-14 shrink-0 place-items-center rounded-full ${toneClass}`}>
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <p className="text-sm font-semibold text-slate-500">{label}</p>
+        <p className="mt-2 truncate text-xl font-bold text-[#0a2a55]">{value}</p>
+        <p className="mt-1 text-sm text-slate-500">{description}</p>
+      </div>
+    </Card>
   );
 }
 
