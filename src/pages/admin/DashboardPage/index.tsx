@@ -2,16 +2,17 @@ import { useEffect, useState } from "react";
 import { AlertCircle } from "lucide-react";
 import { LoadingState } from "../../../components/ui/LoadingState";
 import { useAuth } from "../../../context/AuthContext";
+import { getCriteria } from "../../../services/criterionService";
 import { getDashboardSummary } from "../../../services/dashboardService";
-import {
-  calculateRecommendation,
-  getLatestRecommendation
-} from "../../../services/recommendationService";
+import { getHotels } from "../../../services/hotelService";
+import { getLatestRecommendation } from "../../../services/recommendationService";
+import type { Criterion } from "../../../types/criterion";
 import type { DashboardSummary } from "../../../types/dashboard";
+import type { Hotel } from "../../../types/hotel";
 import type { RecommendationItem } from "../../../types/recommendation";
 import {
   DashboardHero,
-  DashboardMooraPanel,
+  DashboardInsightGrid,
   DashboardRecommendationGrid,
   DashboardStats
 } from "./components";
@@ -21,9 +22,10 @@ export function AdminDashboardPage() {
   const { user } = useAuth();
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [results, setResults] = useState<RecommendationItem[]>([]);
+  const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [criteria, setCriteria] = useState<Criterion[]>([]);
   const [latestCreatedAt, setLatestCreatedAt] = useState("");
   const [loading, setLoading] = useState(true);
-  const [processing, setProcessing] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -36,8 +38,14 @@ export function AdminDashboardPage() {
     setError("");
 
     try {
-      const dashboardSummary = await getDashboardSummary();
+      const [dashboardSummary, hotelItems, criterionItems] = await Promise.all([
+        getDashboardSummary(),
+        getHotels(),
+        getCriteria()
+      ]);
       setSummary(dashboardSummary);
+      setHotels(hotelItems);
+      setCriteria(criterionItems);
     } catch {
       setError("Ringkasan dashboard belum dapat dimuat.");
     }
@@ -51,23 +59,6 @@ export function AdminDashboardPage() {
       setLatestCreatedAt("");
     } finally {
       setLoading(false);
-    }
-  }
-
-  // handleCalculate menjalankan ulang MOORA dan memperbarui isi dashboard.
-  async function handleCalculate() {
-    setProcessing(true);
-    setError("");
-
-    try {
-      const calculation = await calculateRecommendation();
-      setResults(calculation.results);
-      setLatestCreatedAt(new Date().toISOString());
-      setSummary(await getDashboardSummary());
-    } catch {
-      setError("Perhitungan MOORA belum berhasil dijalankan.");
-    } finally {
-      setProcessing(false);
     }
   }
 
@@ -86,10 +77,11 @@ export function AdminDashboardPage() {
       ) : null}
       <DashboardStats results={results} summary={summary} />
       <DashboardRecommendationGrid results={results} />
-      <DashboardMooraPanel
+      <DashboardInsightGrid
+        criteria={criteria}
+        hotels={hotels}
         latestCreatedAt={latestCreatedAt}
-        onCalculate={() => void handleCalculate()}
-        processing={processing}
+        results={results}
       />
     </div>
   );

@@ -1,27 +1,20 @@
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  LabelList,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis
-} from "recharts";
 import type { ReactNode } from "react";
 import {
-  BarChart3,
+  Activity,
+  AlertTriangle,
   Building2,
   CalendarDays,
   ChevronRight,
   ClipboardList,
-  RotateCw,
+  Gauge,
   Trophy,
   Users
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroImage from "../../../assets/hero-kintamani.png";
+import type { Criterion } from "../../../types/criterion";
 import type { DashboardSummary } from "../../../types/dashboard";
+import type { Hotel } from "../../../types/hotel";
 import type { RecommendationItem } from "../../../types/recommendation";
 import { formatDateTime, formatNumber } from "../../../utils/formatters";
 
@@ -38,14 +31,11 @@ interface DashboardRankingTableProps {
   results: RecommendationItem[];
 }
 
-interface DashboardRankingChartProps {
-  results: RecommendationItem[];
-}
-
-interface DashboardMooraPanelProps {
+interface DashboardInsightGridProps {
+  criteria: Criterion[];
+  hotels: Hotel[];
   latestCreatedAt: string;
-  onCalculate: () => void;
-  processing: boolean;
+  results: RecommendationItem[];
 }
 
 const rankColors = ["bg-amber-100", "bg-slate-100", "bg-orange-100", "bg-blue-50", "bg-indigo-50"];
@@ -92,21 +82,21 @@ export function DashboardStats({ results, summary }: DashboardStatsProps) {
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       <MetricCard
         description="Hotel terdaftar"
-        icon={<Building2 className="h-7 w-7" />}
+        icon={<Building2 className="h-5 w-5" />}
         iconTone="bg-blue-50 text-blue-700"
         label="Total Hotel"
         value={summary?.total_hotels ?? 0}
       />
       <MetricCard
         description="Kriteria penilaian"
-        icon={<ClipboardList className="h-7 w-7" />}
+        icon={<ClipboardList className="h-5 w-5" />}
         iconTone="bg-emerald-50 text-emerald-700"
         label="Total Kriteria"
         value={summary?.total_criteria ?? 0}
       />
       <MetricCard
         description="User terdaftar"
-        icon={<Users className="h-7 w-7" />}
+        icon={<Users className="h-5 w-5" />}
         iconTone="bg-amber-50 text-amber-700"
         label="Total Pengguna"
         value={summary?.total_users ?? 0}
@@ -114,57 +104,94 @@ export function DashboardStats({ results, summary }: DashboardStatsProps) {
       <MetricCard
         actionLabel="Lihat detail"
         description="Ranking tertinggi"
-        icon={<Trophy className="h-7 w-7" />}
+        icon={<Trophy className="h-5 w-5" />}
         iconTone="bg-violet-50 text-violet-700"
         label="Rekomendasi Terbaik"
-        to="/admin/moora"
+        to="/admin/moora?view=ranking"
         value={topHotel}
       />
     </div>
   );
 }
 
-// DashboardRecommendationGrid menyusun tabel dan grafik Top 5 rekomendasi.
+// DashboardRecommendationGrid menyusun tabel Top 5 rekomendasi terbaru.
 export function DashboardRecommendationGrid({ results }: { results: RecommendationItem[] }) {
   return (
-    <div className="grid gap-4 xl:grid-cols-[0.95fr_1fr]">
+    <div className="grid gap-4">
       <DashboardRankingTable results={results} />
-      <DashboardRankingChart results={results} />
     </div>
   );
 }
 
-// DashboardMooraPanel menampilkan status perhitungan dan tombol hitung ulang.
-export function DashboardMooraPanel({
+// DashboardInsightGrid menampilkan insight hasil MOORA dan kesiapan data hotel.
+export function DashboardInsightGrid({
+  criteria,
+  hotels,
   latestCreatedAt,
-  onCalculate,
-  processing
-}: DashboardMooraPanelProps) {
-  return (
-    <div className="flex flex-col gap-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex items-center gap-4">
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 text-blue-700">
-          <BarChart3 className="h-6 w-6" />
-        </div>
-        <div>
-          <h2 className="text-base font-bold text-[#0a2a55]">Perhitungan MOORA</h2>
-          <p className="mt-1 text-sm text-slate-500">
-            {latestCreatedAt
-              ? `Terakhir dihitung pada ${formatDateTime(latestCreatedAt)}`
-              : "Belum ada hasil perhitungan tersimpan."}
-          </p>
-        </div>
-      </div>
+  results
+}: DashboardInsightGridProps) {
+  const distribution = buildDistribution(results);
+  const completeness = buildCompleteness(hotels, criteria);
 
-      <button
-        className="flex h-11 items-center justify-center gap-2 rounded-lg border-0 bg-[#0a2a55] px-5 text-sm font-bold text-white shadow-[0_12px_24px_rgba(10,42,85,0.18)] transition hover:bg-[#0f3f78] disabled:cursor-not-allowed disabled:opacity-70"
-        disabled={processing}
-        onClick={onCalculate}
-        type="button"
-      >
-        {processing ? "Menghitung" : "Hitung Ulang"}
-        <RotateCw className={`h-4 w-4 ${processing ? "animate-spin" : ""}`} />
-      </button>
+  return (
+    <div className="grid gap-4 xl:grid-cols-2">
+      <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="flex items-start gap-3">
+          <div className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-700">
+            <Gauge className="h-5 w-5" />
+          </div>
+          <div>
+            <h2 className="text-base font-bold text-[#0a2a55]">Distribusi Nilai MOORA</h2>
+            <p className="mt-1 text-sm leading-5 text-slate-500">
+              {latestCreatedAt
+                ? `Hasil terakhir: ${formatDateTime(latestCreatedAt)}`
+                : "Belum ada hasil perhitungan tersimpan."}
+            </p>
+          </div>
+        </div>
+
+        {results.length === 0 ? (
+          <EmptyRecommendation compact label="Distribusi akan tampil setelah ranking tersedia." />
+        ) : (
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <InsightMetric label="Nilai Tertinggi" value={formatNumber(distribution.highest, 5)} />
+            <InsightMetric label="Rata-rata Yi" value={formatNumber(distribution.average, 5)} />
+            <InsightMetric label="Nilai Terendah" value={formatNumber(distribution.lowest, 5)} />
+            <InsightMetric label="Selisih Rank 1-2" value={formatNumber(distribution.gapTopTwo, 5)} />
+          </div>
+        )}
+      </section>
+
+      <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="flex items-start gap-3">
+          <div
+            className={`grid h-11 w-11 shrink-0 place-items-center rounded-lg ${
+              completeness.reviewHotels > 0
+                ? "bg-amber-50 text-amber-700"
+                : "bg-emerald-50 text-emerald-700"
+            }`}
+          >
+            {completeness.reviewHotels > 0 ? (
+              <AlertTriangle className="h-5 w-5" />
+            ) : (
+              <Activity className="h-5 w-5" />
+            )}
+          </div>
+          <div>
+            <h2 className="text-base font-bold text-[#0a2a55]">Status Kelengkapan Data</h2>
+            <p className="mt-1 text-sm leading-5 text-slate-500">
+              Mengecek nilai hotel terhadap {criteria.length} kriteria aktif.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <InsightMetric label="Hotel Lengkap" value={`${completeness.completeHotels}/${hotels.length}`} />
+          <InsightMetric label="Perlu Dicek" value={`${completeness.reviewHotels} Hotel`} />
+          <InsightMetric label="Nilai Kosong" value={String(completeness.missingValues)} />
+          <InsightMetric label="Nilai 0" value={String(completeness.zeroValues)} />
+        </div>
+      </section>
     </div>
   );
 }
@@ -188,20 +215,22 @@ function MetricCard({
   value: number | string;
 }) {
   return (
-    <div className="flex min-h-[156px] items-center gap-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-      <div className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-full ${iconTone}`}>
+    <div className="flex min-h-[126px] items-center gap-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${iconTone}`}>
         {icon}
       </div>
       <div className="min-w-0">
-        <p className="text-sm font-semibold text-slate-500">{label}</p>
-        <p className="mt-3 truncate text-3xl font-bold tracking-tight text-black">{value}</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p>
+        <p className="mt-2 line-clamp-2 break-words text-2xl font-bold leading-tight tracking-tight text-[#0a2a55]">
+          {value}
+        </p>
         {actionLabel && to ? (
-          <Link className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-blue-700" to={to}>
+          <Link className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-blue-700" to={to}>
             {actionLabel}
             <ChevronRight className="h-4 w-4" />
           </Link>
         ) : (
-          <p className="mt-4 text-sm text-slate-500">{description}</p>
+          <p className="mt-2 text-sm leading-5 text-slate-500">{description}</p>
         )}
       </div>
     </div>
@@ -255,7 +284,7 @@ function DashboardRankingTable({ results }: DashboardRankingTableProps) {
       )}
       <Link
         className="mt-5 flex h-12 items-center justify-between rounded-lg border border-slate-200 px-4 text-sm font-semibold text-[#0a2a55] transition hover:bg-blue-50"
-        to="/admin/moora"
+        to="/admin/moora?view=ranking"
       >
         Lihat semua ranking
         <ChevronRight className="h-5 w-5 text-slate-400" />
@@ -264,69 +293,71 @@ function DashboardRankingTable({ results }: DashboardRankingTableProps) {
   );
 }
 
-// DashboardRankingChart menampilkan grafik batang Top 5 rekomendasi terbaru.
-function DashboardRankingChart({ results }: DashboardRankingChartProps) {
-  const data = results.slice(0, 5).map((item) => ({
-    name: item.hotel.name,
-    value: item.preference_value
-  }));
-
-  return (
-    <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-      <h2 className="text-lg font-bold text-[#0a2a55]">Grafik Top 5 Rekomendasi</h2>
-      {data.length === 0 ? (
-        <EmptyRecommendation label="Grafik akan tampil setelah ranking tersedia." />
-      ) : (
-        <div className="mt-6 h-[330px]">
-          <ResponsiveContainer height="100%" width="100%">
-            <BarChart data={data} margin={{ top: 24, right: 12, left: -18, bottom: 12 }}>
-              <CartesianGrid stroke="#e2e8f0" strokeDasharray="4 4" vertical={false} />
-              <XAxis
-                axisLine={{ stroke: "#cbd5e1" }}
-                dataKey="name"
-                fontSize={12}
-                interval={0}
-                tickFormatter={(value) => truncateLabel(String(value))}
-                tickLine={false}
-              />
-              <YAxis
-                axisLine={false}
-                fontSize={12}
-                tickFormatter={(value) => formatNumber(Number(value), 2)}
-                tickLine={false}
-              />
-              <Tooltip
-                formatter={(value) => [formatNumber(Number(value), 5), "Nilai"]}
-                labelStyle={{ color: "#0a2a55", fontWeight: 700 }}
-              />
-              <Bar dataKey="value" fill="#0a2a55" radius={[4, 4, 0, 0]}>
-                <LabelList
-                  dataKey="value"
-                  fill="#0a2a55"
-                  fontSize={12}
-                  fontWeight={700}
-                  formatter={(value: number) => formatNumber(value, 4)}
-                  position="top"
-                />
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-    </section>
-  );
-}
-
 // EmptyRecommendation menampilkan pesan kosong yang konsisten untuk tabel dan grafik.
-function EmptyRecommendation({ label }: { label: string }) {
+function EmptyRecommendation({ compact = false, label }: { compact?: boolean; label: string }) {
   return (
-    <div className="mt-5 flex min-h-[260px] items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50/70 px-5 text-center text-sm font-medium text-slate-500">
+    <div
+      className={`mt-5 flex items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50/70 px-5 text-center text-sm font-medium text-slate-500 ${
+        compact ? "min-h-[132px]" : "min-h-[260px]"
+      }`}
+    >
       {label}
     </div>
   );
 }
 
-// truncateLabel memendekkan nama hotel agar label grafik tetap rapi.
-function truncateLabel(value: string) {
-  return value.length > 16 ? `${value.slice(0, 15)}...` : value;
+// InsightMetric menampilkan angka ringkas untuk panel insight dashboard.
+function InsightMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-slate-100 bg-slate-50/80 p-4">
+      <p className="text-xs font-bold uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="mt-2 text-xl font-bold text-[#0a2a55]">{value}</p>
+    </div>
+  );
+}
+
+// buildDistribution menghitung sebaran nilai preferensi hasil MOORA terbaru.
+function buildDistribution(results: RecommendationItem[]) {
+  const values = results.map((item) => item.preference_value);
+  const highest = values.length > 0 ? Math.max(...values) : 0;
+  const lowest = values.length > 0 ? Math.min(...values) : 0;
+  const average = values.length > 0 ? values.reduce((total, value) => total + value, 0) / values.length : 0;
+  const gapTopTwo = results.length > 1 ? results[0].preference_value - results[1].preference_value : 0;
+
+  return { average, gapTopTwo, highest, lowest };
+}
+
+// buildCompleteness menghitung kelengkapan nilai kriteria untuk seluruh hotel.
+function buildCompleteness(hotels: Hotel[], criteria: Criterion[]) {
+  const criterionIDs = criteria.map((criterion) => criterion.id);
+  let completeHotels = 0;
+  let missingValues = 0;
+  let reviewHotels = 0;
+  let zeroValues = 0;
+
+  for (const hotel of hotels) {
+    let needsReview = false;
+
+    for (const criterionID of criterionIDs) {
+      const value = hotel.criterion_values?.find((item) => item.criterion_id === criterionID);
+      if (!value) {
+        missingValues += 1;
+        needsReview = true;
+        continue;
+      }
+
+      if (value.value === 0) {
+        zeroValues += 1;
+        needsReview = true;
+      }
+    }
+
+    if (needsReview) {
+      reviewHotels += 1;
+    } else {
+      completeHotels += 1;
+    }
+  }
+
+  return { completeHotels, missingValues, reviewHotels, zeroValues };
 }
