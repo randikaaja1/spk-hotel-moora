@@ -58,6 +58,10 @@ func (s *Service) Create(ctx context.Context, request SaveCriterionRequest) (*Cr
 		return nil, err
 	}
 
+	if err := s.repository.EnsureHotelValues(ctx, item.ID, 0); err != nil {
+		return nil, err
+	}
+
 	if err := s.repository.NormalizeWeights(ctx); err != nil {
 		return nil, err
 	}

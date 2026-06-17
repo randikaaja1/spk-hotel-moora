@@ -5,7 +5,10 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
+
+	"spk-hotel-moora-service-go/internal/modules/hotels"
 )
 
 type Repository struct {
@@ -132,6 +135,10 @@ func (r *Repository) FindLatest(ctx context.Context, userID int64, calculationTy
 		return nil, ErrRecommendationNotFound
 	}
 
+	if err := r.attachHotelCriterionValues(ctx, results); err != nil {
+		return nil, err
+	}
+
 	return results, nil
 }
 
@@ -188,4 +195,78 @@ func (r *Repository) FindTopResult(ctx context.Context) (*StoredResult, error) {
 	}
 
 	return result, nil
+}
+
+// attachHotelCriterionValues mengisi nilai kriteria hotel pada hasil rekomendasi tersimpan.
+func (r *Repository) attachHotelCriterionValues(ctx context.Context, results []StoredResult) error {
+	if len(results) == 0 {
+		return nil
+	}
+
+	resultIndexesByHotelID := make(map[int64][]int, len(results))
+	hotelIDs := make([]any, 0, len(results))
+	seenHotelIDs := make(map[int64]struct{}, len(results))
+	for index, result := range results {
+		resultIndexesByHotelID[result.Hotel.ID] = append(resultIndexesByHotelID[result.Hotel.ID], index)
+		if _, seen := seenHotelIDs[result.Hotel.ID]; seen {
+			continue
+		}
+
+		seenHotelIDs[result.Hotel.ID] = struct{}{}
+		hotelIDs = append(hotelIDs, result.Hotel.ID)
+	}
+
+	query := fmt.Sprintf(`
+		SELECT
+			hcv.hotel_id,
+			c.id,
+			c.code,
+			c.name,
+			c.attribute,
+			hcv.value
+		FROM hotel_criterion_values hcv
+		INNER JOIN criteria c ON c.id = hcv.criterion_id
+		WHERE hcv.hotel_id IN (%s)
+		ORDER BY c.code ASC
+	`, buildPlaceholders(len(hotelIDs)))
+
+	rows, err := r.db.QueryContext(ctx, query, hotelIDs...)
+	if err != nil {
+		return fmt.Errorf("find stored result criterion values: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var hotelID int64
+		var value hotels.HotelCriterionValue
+		if err := rows.Scan(
+			&hotelID,
+			&value.CriterionID,
+			&value.Code,
+			&value.Name,
+			&value.Attribute,
+			&value.Value,
+		); err != nil {
+			return fmt.Errorf("scan stored result criterion value: %w", err)
+		}
+
+		for _, index := range resultIndexesByHotelID[hotelID] {
+			results[index].Hotel.CriterionValues = append(results[index].Hotel.CriterionValues, value)
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("iterate stored result criterion values: %w", err)
+	}
+
+	return nil
+}
+
+// buildPlaceholders membuat placeholder SQL untuk query IN berdasarkan jumlah item.
+func buildPlaceholders(count int) string {
+	if count <= 0 {
+		return ""
+	}
+
+	return strings.TrimSuffix(strings.Repeat("?,", count), ",")
 }

@@ -37,13 +37,13 @@ func SetupRouter(db *sql.DB, cfg *config.Config) *gin.Engine {
 	authService := auth.NewService(authRepository, cfg)
 	authHandler := auth.NewHandler(authService)
 
-	hotelRepository := hotels.NewRepository(db)
-	hotelService := hotels.NewService(hotelRepository)
-	hotelHandler := hotels.NewHandler(hotelService)
-
 	criterionRepository := criteria.NewRepository(db)
 	criterionService := criteria.NewService(criterionRepository)
 	criterionHandler := criteria.NewHandler(criterionService)
+
+	hotelRepository := hotels.NewRepository(db)
+	hotelService := hotels.NewService(hotelRepository, criterionRepository)
+	hotelHandler := hotels.NewHandler(hotelService)
 
 	preferenceRepository := preferences.NewRepository(db)
 	preferenceService := preferences.NewService(preferenceRepository)

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 )
 
 type Repository struct {
@@ -47,6 +48,10 @@ func (r *Repository) FindAll(ctx context.Context) ([]Hotel, error) {
 		return nil, fmt.Errorf("iterate hotels: %w", err)
 	}
 
+	if err := r.attachCriterionValues(ctx, hotels); err != nil {
+		return nil, err
+	}
+
 	return hotels, nil
 }
 
@@ -83,11 +88,23 @@ func (r *Repository) FindByID(ctx context.Context, id int64) (*Hotel, error) {
 		return nil, fmt.Errorf("find hotel by id: %w", err)
 	}
 
+	hotels := []Hotel{*hotel}
+	if err := r.attachCriterionValues(ctx, hotels); err != nil {
+		return nil, err
+	}
+	*hotel = hotels[0]
+
 	return hotel, nil
 }
 
 // Create menyimpan hotel baru ke database.
 func (r *Repository) Create(ctx context.Context, hotel *Hotel) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("begin create hotel transaction: %w", err)
+	}
+	defer tx.Rollback()
+
 	query := `
 		INSERT INTO hotels (
 			name, price, rating_facility, accessibility, distance_km,
@@ -96,7 +113,7 @@ func (r *Repository) Create(ctx context.Context, hotel *Hotel) error {
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
-	result, err := r.db.ExecContext(
+	result, err := tx.ExecContext(
 		ctx,
 		query,
 		hotel.Name,
@@ -119,11 +136,25 @@ func (r *Repository) Create(ctx context.Context, hotel *Hotel) error {
 
 	hotel.ID = hotelID
 
+	if err := r.saveCriterionValuesTx(ctx, tx, hotel.ID, hotel.CriterionValues); err != nil {
+		return err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit create hotel transaction: %w", err)
+	}
+
 	return nil
 }
 
 // Update memperbarui seluruh field hotel berdasarkan id.
 func (r *Repository) Update(ctx context.Context, hotel *Hotel) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("begin update hotel transaction: %w", err)
+	}
+	defer tx.Rollback()
+
 	query := `
 		UPDATE hotels
 		SET name = ?, price = ?, rating_facility = ?, accessibility = ?,
@@ -131,7 +162,7 @@ func (r *Repository) Update(ctx context.Context, hotel *Hotel) error {
 		WHERE id = ?
 	`
 
-	result, err := r.db.ExecContext(
+	result, err := tx.ExecContext(
 		ctx,
 		query,
 		hotel.Name,
@@ -155,6 +186,14 @@ func (r *Repository) Update(ctx context.Context, hotel *Hotel) error {
 
 	if rowsAffected == 0 {
 		return ErrHotelNotFound
+	}
+
+	if err := r.saveCriterionValuesTx(ctx, tx, hotel.ID, hotel.CriterionValues); err != nil {
+		return err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit update hotel transaction: %w", err)
 	}
 
 	return nil
@@ -212,4 +251,94 @@ func scanHotel(rows *sql.Rows, hotel *Hotel) error {
 	}
 
 	return nil
+}
+
+// attachCriterionValues mengambil nilai kriteria dinamis untuk daftar hotel.
+func (r *Repository) attachCriterionValues(ctx context.Context, hotels []Hotel) error {
+	if len(hotels) == 0 {
+		return nil
+	}
+
+	hotelIndexByID := make(map[int64]int, len(hotels))
+	hotelIDs := make([]any, 0, len(hotels))
+	for index, hotel := range hotels {
+		hotelIndexByID[hotel.ID] = index
+		hotelIDs = append(hotelIDs, hotel.ID)
+	}
+
+	query := fmt.Sprintf(`
+		SELECT
+			hcv.hotel_id,
+			c.id,
+			c.code,
+			c.name,
+			c.attribute,
+			hcv.value
+		FROM hotel_criterion_values hcv
+		INNER JOIN criteria c ON c.id = hcv.criterion_id
+		WHERE hcv.hotel_id IN (%s)
+		ORDER BY c.code ASC
+	`, buildPlaceholders(len(hotelIDs)))
+
+	rows, err := r.db.QueryContext(ctx, query, hotelIDs...)
+	if err != nil {
+		return fmt.Errorf("find hotel criterion values: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var hotelID int64
+		var value HotelCriterionValue
+		if err := rows.Scan(
+			&hotelID,
+			&value.CriterionID,
+			&value.Code,
+			&value.Name,
+			&value.Attribute,
+			&value.Value,
+		); err != nil {
+			return fmt.Errorf("scan hotel criterion value: %w", err)
+		}
+
+		if index, ok := hotelIndexByID[hotelID]; ok {
+			hotels[index].CriterionValues = append(hotels[index].CriterionValues, value)
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("iterate hotel criterion values: %w", err)
+	}
+
+	return nil
+}
+
+// saveCriterionValuesTx menyimpan nilai kriteria hotel dalam transaksi yang sama.
+func (r *Repository) saveCriterionValuesTx(ctx context.Context, tx *sql.Tx, hotelID int64, values []HotelCriterionValue) error {
+	if len(values) == 0 {
+		return nil
+	}
+
+	query := `
+		INSERT INTO hotel_criterion_values (hotel_id, criterion_id, value)
+		VALUES (?, ?, ?)
+		ON DUPLICATE KEY UPDATE
+			value = VALUES(value)
+	`
+
+	for _, value := range values {
+		if _, err := tx.ExecContext(ctx, query, hotelID, value.CriterionID, value.Value); err != nil {
+			return fmt.Errorf("save hotel criterion value: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// buildPlaceholders membuat placeholder SQL untuk query IN berdasarkan jumlah item.
+func buildPlaceholders(count int) string {
+	if count <= 0 {
+		return ""
+	}
+
+	return strings.TrimSuffix(strings.Repeat("?,", count), ",")
 }

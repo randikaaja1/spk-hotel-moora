@@ -188,10 +188,6 @@ func prepareCriteria(items []criteria.Criterion) ([]calculationCriterion, error)
 
 	prepared := make([]calculationCriterion, 0, len(items))
 	for _, item := range items {
-		if _, err := resolveHotelValue(hotels.Hotel{}, item.Code, item.Name); err != nil {
-			return nil, err
-		}
-
 		prepared = append(prepared, calculationCriterion{
 			ID:               item.ID,
 			Code:             item.Code,
@@ -246,7 +242,7 @@ func calculateMOORA(hotelItems []hotels.Hotel, criterionItems []calculationCrite
 	for _, criterion := range criterionItems {
 		sumSquares := 0.0
 		for _, hotel := range hotelItems {
-			value, err := resolveHotelValue(hotel, criterion.Code, criterion.Name)
+			value, err := resolveHotelValue(hotel, criterion)
 			if err != nil {
 				return nil, err
 			}
@@ -268,7 +264,7 @@ func calculateMOORA(hotelItems []hotels.Hotel, criterionItems []calculationCrite
 		totalBenefit := 0.0
 		totalCost := 0.0
 		for _, criterion := range criterionItems {
-			rawValue, err := resolveHotelValue(hotel, criterion.Code, criterion.Name)
+			rawValue, err := resolveHotelValue(hotel, criterion)
 			if err != nil {
 				return nil, err
 			}
@@ -317,8 +313,19 @@ func calculateMOORA(hotelItems []hotels.Hotel, criterionItems []calculationCrite
 	return results, nil
 }
 
-// resolveHotelValue mengambil nilai hotel yang sesuai dengan kode atau nama kriteria.
-func resolveHotelValue(hotel hotels.Hotel, code string, name string) (float64, error) {
+// resolveHotelValue mengambil nilai hotel berdasarkan criterion_id dan fallback field lama.
+func resolveHotelValue(hotel hotels.Hotel, criterion calculationCriterion) (float64, error) {
+	for _, value := range hotel.CriterionValues {
+		if value.CriterionID == criterion.ID {
+			return value.Value, nil
+		}
+	}
+
+	return resolveLegacyHotelValue(hotel, criterion.Code, criterion.Name)
+}
+
+// resolveLegacyHotelValue menjaga kompatibilitas data lama sebelum nilai kriteria dibuat dinamis.
+func resolveLegacyHotelValue(hotel hotels.Hotel, code string, name string) (float64, error) {
 	switch strings.ToUpper(strings.TrimSpace(code)) {
 	case "C1":
 		return hotel.Price, nil
@@ -340,6 +347,8 @@ func resolveHotelValue(hotel hotels.Hotel, code string, name string) (float64, e
 		return hotel.RatingFacility, nil
 	case strings.Contains(normalizedName, "akses"):
 		return hotel.Accessibility, nil
+	case strings.Contains(normalizedName, "jarak"):
+		return hotel.DistanceKM, nil
 	case strings.Contains(normalizedName, "lokasi"):
 		return hotel.LocationScore, nil
 	case strings.Contains(normalizedName, "view"):

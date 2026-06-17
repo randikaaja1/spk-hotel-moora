@@ -181,6 +181,23 @@ func (r *Repository) NormalizeWeights(ctx context.Context) error {
 	return nil
 }
 
+// EnsureHotelValues membuat nilai awal kriteria untuk seluruh hotel yang sudah ada.
+func (r *Repository) EnsureHotelValues(ctx context.Context, criterionID int64, defaultValue float64) error {
+	query := `
+		INSERT INTO hotel_criterion_values (hotel_id, criterion_id, value)
+		SELECT id, ?, ?
+		FROM hotels
+		ON DUPLICATE KEY UPDATE
+			value = hotel_criterion_values.value
+	`
+
+	if _, err := r.db.ExecContext(ctx, query, criterionID, defaultValue); err != nil {
+		return fmt.Errorf("ensure hotel criterion values: %w", err)
+	}
+
+	return nil
+}
+
 // Count menghitung total kriteria untuk kebutuhan dashboard admin.
 func (r *Repository) Count(ctx context.Context) (int64, error) {
 	query := `SELECT COUNT(*) FROM criteria`
