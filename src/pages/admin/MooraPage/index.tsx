@@ -1,5 +1,16 @@
-import { useEffect, useState } from "react";
-import { Calculator, RotateCcw } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import {
+  ArrowDownUp,
+  BarChart3,
+  Calculator,
+  CheckCircle2,
+  Database,
+  RotateCcw,
+  Sigma,
+  Table2
+} from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import { RecommendationChart } from "../../../components/domain/RecommendationChart";
 import { RecommendationTable } from "../../../components/domain/RecommendationTable";
 import { Alert } from "../../../components/ui/Alert";
@@ -8,14 +19,204 @@ import { Card } from "../../../components/ui/Card";
 import { EmptyState } from "../../../components/ui/EmptyState";
 import { LoadingState } from "../../../components/ui/LoadingState";
 import { PageHeader } from "../../../components/ui/PageHeader";
+import { TableShell } from "../../../components/ui/TableShell";
+import { getCriteria } from "../../../services/criterionService";
+import { getHotels } from "../../../services/hotelService";
 import {
   calculateRecommendation,
   getLatestRecommendation
 } from "../../../services/recommendationService";
-import type { RecommendationItem } from "../../../types/recommendation";
+import type { Criterion } from "../../../types/criterion";
+import type {
+  CalculateRecommendationResponse,
+  CriterionScore,
+  RecommendationItem
+} from "../../../types/recommendation";
+import { formatCurrency, formatNumber } from "../../../utils/formatters";
 
-// AdminMooraPage menjalankan perhitungan MOORA umum untuk semua hotel.
+// AdminMooraPage memisahkan tampilan proses perhitungan dan hasil ranking MOORA.
 export function AdminMooraPage() {
+  const [searchParams] = useSearchParams();
+  const isResultView = searchParams.get("view") === "ranking";
+
+  return isResultView ? <MooraResultView /> : <MooraProcessView />;
+}
+
+// MooraProcessView menampilkan tahapan, matriks, dan detail perhitungan MOORA.
+function MooraProcessView() {
+  const [criteria, setCriteria] = useState<Criterion[]>([]);
+  const [hotelCount, setHotelCount] = useState(0);
+  const [calculation, setCalculation] = useState<CalculateRecommendationResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [processing, setProcessing] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    void loadReadiness();
+  }, []);
+
+  const processRows = useMemo(() => buildProcessRows(calculation?.results ?? []), [calculation]);
+  const bestResult = calculation?.results[0];
+
+  // loadReadiness mengambil jumlah hotel dan kriteria untuk validasi sebelum hitung.
+  async function loadReadiness() {
+    setLoading(true);
+    setError("");
+
+    try {
+      const [hotels, criteriaItems] = await Promise.all([getHotels(), getCriteria()]);
+      setHotelCount(hotels.length);
+      setCriteria(criteriaItems);
+    } catch {
+      setError("Data awal proses MOORA belum dapat dimuat.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // handleCalculate menjalankan ulang MOORA dan menampilkan detail prosesnya.
+  async function handleCalculate() {
+    setProcessing(true);
+    setMessage("");
+    setError("");
+
+    try {
+      const result = await calculateRecommendation();
+      setCalculation(result);
+      setMessage("Perhitungan MOORA berhasil dijalankan dan detail proses siap ditinjau.");
+      await loadReadiness();
+    } catch {
+      setError("Perhitungan MOORA belum berhasil dijalankan.");
+    } finally {
+      setProcessing(false);
+    }
+  }
+
+  if (loading) {
+    return <LoadingState label="Memuat data proses" />;
+  }
+
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        action={
+          <Button disabled={processing} icon={<Calculator size={18} />} onClick={() => void handleCalculate()}>
+            {processing ? "Menghitung" : "Hitung MOORA"}
+          </Button>
+        }
+        description="Periksa kesiapan data, jalankan perhitungan, lalu lihat matriks keputusan, normalisasi, pembobotan, dan nilai Yi."
+        title="Proses Perhitungan MOORA"
+      />
+      <Alert message={message} variant="success" />
+      <Alert message={error} variant="error" />
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <ProcessStatCard
+          description="Alternatif yang akan dinilai."
+          icon={<Database className="h-6 w-6" />}
+          label="Total Hotel"
+          tone="blue"
+          value={hotelCount}
+        />
+        <ProcessStatCard
+          description="Kriteria dan bobot penilaian."
+          icon={<Table2 className="h-6 w-6" />}
+          label="Total Kriteria"
+          tone="emerald"
+          value={criteria.length}
+        />
+        <ProcessStatCard
+          description="Hotel yang ikut dihitung setelah filter."
+          icon={<CheckCircle2 className="h-6 w-6" />}
+          label="Hotel Dihitung"
+          tone="amber"
+          value={calculation?.filtered_hotels ?? "-"}
+        />
+      </div>
+
+      <Card>
+        <div className="mb-5">
+          <h2 className="text-lg font-bold text-[#0a2a55]">Alur Proses</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Status langkah perhitungan berdasarkan data yang tersedia dan hasil proses terakhir.
+          </p>
+        </div>
+        <div className="grid gap-3 md:grid-cols-5">
+          <ProcessStep done={hotelCount > 0} index="01" label="Data Hotel" />
+          <ProcessStep done={criteria.length > 0} index="02" label="Data Kriteria" />
+          <ProcessStep done={Boolean(calculation)} index="03" label="Normalisasi" />
+          <ProcessStep done={Boolean(calculation)} index="04" label="Pembobotan" />
+          <ProcessStep done={Boolean(calculation)} index="05" label="Ranking Yi" />
+        </div>
+      </Card>
+
+      {!calculation ? (
+        <EmptyState title="Jalankan Hitung MOORA untuk melihat detail matriks proses." />
+      ) : (
+        <>
+          <Card>
+            <div className="mb-5">
+              <h2 className="text-lg font-bold text-[#0a2a55]">Ringkasan Hasil Proses</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Nilai terbaik sementara: {bestResult?.hotel.name ?? "-"} dengan Yi{" "}
+                {bestResult ? formatNumber(bestResult.preference_value, 5) : "-"}.
+              </p>
+            </div>
+            <TableShell>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Rank</th>
+                    <th>Hotel</th>
+                    <th>Total Benefit</th>
+                    <th>Total Cost</th>
+                    <th>Yi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {processRows.map((row) => (
+                    <tr key={row.hotelId}>
+                      <td>#{row.rank}</td>
+                      <td>
+                        <strong className="font-bold text-[#0a2a55]">{row.hotelName}</strong>
+                      </td>
+                      <td>{formatNumber(row.totalBenefit, 6)}</td>
+                      <td>{formatNumber(row.totalCost, 6)}</td>
+                      <td>{formatNumber(row.preferenceValue, 6)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </TableShell>
+          </Card>
+
+          <MooraMatrixCard
+            description="Nilai asli setiap hotel sebelum normalisasi."
+            mode="raw"
+            results={calculation.results}
+            title="Matriks Keputusan"
+          />
+          <MooraMatrixCard
+            description="Nilai setiap kolom dibagi akar jumlah kuadrat pada kriteria yang sama."
+            mode="normalized"
+            results={calculation.results}
+            title="Matriks Normalisasi"
+          />
+          <MooraMatrixCard
+            description="Nilai normalisasi dikalikan bobot normalisasi kriteria."
+            mode="weighted"
+            results={calculation.results}
+            title="Matriks Terbobot"
+          />
+        </>
+      )}
+    </div>
+  );
+}
+
+// MooraResultView menampilkan output akhir ranking yang tersimpan atau baru dihitung.
+function MooraResultView() {
   const [results, setResults] = useState<RecommendationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
@@ -66,12 +267,13 @@ export function AdminMooraPage() {
             <Button icon={<RotateCcw size={18} />} onClick={() => void loadLatest()} variant="secondary">
               Latest
             </Button>
-            <Button disabled={processing} icon={<Calculator size={18} />} onClick={() => void handleCalculate()}>
-              {processing ? "Menghitung" : "Generate"}
+            <Button disabled={processing} icon={<BarChart3 size={18} />} onClick={() => void handleCalculate()}>
+              {processing ? "Menghitung" : "Hitung Ulang"}
             </Button>
           </div>
         }
-        title="Perhitungan MOORA"
+        description="Output akhir ranking hotel berdasarkan nilai Yi terbesar."
+        title="Hasil Ranking MOORA"
       />
       <Alert message={message} variant="success" />
       <Alert message={error} variant="error" />
@@ -104,4 +306,173 @@ export function AdminMooraPage() {
       )}
     </div>
   );
+}
+
+// ProcessStatCard menampilkan ringkasan kesiapan data proses MOORA.
+function ProcessStatCard({
+  description,
+  icon,
+  label,
+  tone,
+  value
+}: {
+  description: string;
+  icon: ReactNode;
+  label: string;
+  tone: "blue" | "emerald" | "amber";
+  value: number | string;
+}) {
+  const toneClass = {
+    blue: "bg-blue-50 text-blue-700",
+    emerald: "bg-emerald-50 text-emerald-700",
+    amber: "bg-amber-50 text-amber-700"
+  }[tone];
+
+  return (
+    <Card className="flex items-center gap-4">
+      <div className={`grid h-14 w-14 shrink-0 place-items-center rounded-full ${toneClass}`}>
+        {icon}
+      </div>
+      <div>
+        <p className="text-sm font-semibold text-slate-500">{label}</p>
+        <p className="mt-2 text-3xl font-bold text-[#0a2a55]">{value}</p>
+        <p className="mt-1 text-sm text-slate-500">{description}</p>
+      </div>
+    </Card>
+  );
+}
+
+// ProcessStep menampilkan status langkah proses MOORA.
+function ProcessStep({ done, index, label }: { done: boolean; index: string; label: string }) {
+  return (
+    <div
+      className={`rounded-lg border p-4 ${
+        done ? "border-emerald-100 bg-emerald-50/70" : "border-slate-200 bg-slate-50"
+      }`}
+    >
+      <p className="text-xs font-bold uppercase tracking-wide text-slate-500">{index}</p>
+      <div className="mt-3 flex items-center gap-2">
+        {done ? (
+          <CheckCircle2 className="h-5 w-5 text-emerald-700" />
+        ) : (
+          <ArrowDownUp className="h-5 w-5 text-slate-400" />
+        )}
+        <strong className="text-sm text-[#0a2a55]">{label}</strong>
+      </div>
+    </div>
+  );
+}
+
+// MooraMatrixCard menampilkan tabel matriks keputusan, normalisasi, atau terbobot.
+function MooraMatrixCard({
+  description,
+  mode,
+  results,
+  title
+}: {
+  description: string;
+  mode: "raw" | "normalized" | "weighted";
+  results: RecommendationItem[];
+  title: string;
+}) {
+  const criteria = getScoreHeaders(results);
+
+  return (
+    <Card>
+      <div className="mb-5 flex items-start gap-3">
+        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-700">
+          <Sigma className="h-5 w-5" />
+        </div>
+        <div>
+          <h2 className="text-lg font-bold text-[#0a2a55]">{title}</h2>
+          <p className="mt-1 text-sm text-slate-500">{description}</p>
+        </div>
+      </div>
+      <TableShell>
+        <table>
+          <thead>
+            <tr>
+              <th>Hotel</th>
+              {criteria.map((criterion) => (
+                <th key={`${mode}-${criterion.code}`}>
+                  {criterion.code}
+                  <span className="mt-1 block text-[10px] normal-case text-slate-400">
+                    {criterion.attribute}
+                  </span>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {results.map((item) => (
+              <tr key={`${mode}-${item.hotel.id}`}>
+                <td>
+                  <strong className="font-bold text-[#0a2a55]">{item.hotel.name}</strong>
+                </td>
+                {criteria.map((criterion) => {
+                  const score = item.scores?.find((entry) => entry.code === criterion.code);
+                  return (
+                    <td key={`${mode}-${item.hotel.id}-${criterion.code}`}>
+                      {formatScoreValue(score, mode)}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </TableShell>
+    </Card>
+  );
+}
+
+// buildProcessRows menghitung total benefit dan cost dari skor hasil calculate.
+function buildProcessRows(results: RecommendationItem[]) {
+  return results.map((item) => {
+    const totals = (item.scores ?? []).reduce(
+      (current, score) => {
+        if (score.attribute === "cost") {
+          current.totalCost += score.weighted_value;
+        } else {
+          current.totalBenefit += score.weighted_value;
+        }
+
+        return current;
+      },
+      { totalBenefit: 0, totalCost: 0 }
+    );
+
+    return {
+      hotelId: item.hotel.id,
+      hotelName: item.hotel.name,
+      preferenceValue: item.preference_value,
+      rank: item.rank,
+      ...totals
+    };
+  });
+}
+
+// getScoreHeaders mengambil daftar kriteria dari hasil skor pertama yang tersedia.
+function getScoreHeaders(results: RecommendationItem[]): CriterionScore[] {
+  return results.find((item) => item.scores && item.scores.length > 0)?.scores ?? [];
+}
+
+// formatScoreValue memformat nilai matriks sesuai mode yang sedang ditampilkan.
+function formatScoreValue(score: CriterionScore | undefined, mode: "raw" | "normalized" | "weighted") {
+  if (!score) {
+    return "-";
+  }
+
+  if (mode === "raw" && score.code === "C1") {
+    return formatCurrency(score.raw_value);
+  }
+
+  const value =
+    mode === "raw"
+      ? score.raw_value
+      : mode === "normalized"
+        ? score.normalized_value
+        : score.weighted_value;
+
+  return formatNumber(value, mode === "raw" ? 2 : 6);
 }
