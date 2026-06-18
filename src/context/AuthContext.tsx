@@ -51,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // handleLogin menyimpan token dan profil setelah kredensial berhasil diverifikasi.
   const handleLogin = useCallback(async (payload: LoginPayload) => {
     const result = await authService.login(payload);
     setStoredToken(result.token);
@@ -58,8 +59,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return result.user;
   }, []);
 
+  // handleRegister membuat akun baru lalu langsung login agar user tidak masuk dua kali.
   const handleRegister = useCallback(async (payload: RegisterPayload) => {
-    return authService.register(payload);
+    await authService.register(payload);
+    const result = await authService.login({
+      email: payload.email,
+      password: payload.password
+    });
+    setStoredToken(result.token);
+    setUser(result.user);
+    return result.user;
   }, []);
 
   const handleLogout = useCallback(() => {

@@ -21,7 +21,6 @@ export function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -33,13 +32,11 @@ export function RegisterPage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
-    setMessage("");
     setSubmitting(true);
 
     try {
-      await register({ name, email, password });
-      setMessage("Registrasi berhasil. Silakan masuk.");
-      window.setTimeout(() => navigate("/login"), 700);
+      const registeredUser = await register({ name, email, password });
+      navigate(registeredUser.role === "admin" ? "/admin/dashboard" : "/hotels", { replace: true });
     } catch (err) {
       setError(err instanceof ApiRequestError ? err.message : "Registrasi gagal");
     } finally {
@@ -55,7 +52,6 @@ export function RegisterPage() {
         title="Mulai gunakan sistem"
       >
         <form className="mt-7 space-y-4" onSubmit={handleSubmit}>
-          <AuthAlert message={message} variant="success" />
           <AuthAlert message={error} variant="error" />
           <AuthTextInput
             autoComplete="name"

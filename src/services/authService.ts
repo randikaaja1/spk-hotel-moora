@@ -1,5 +1,10 @@
 import { apiRequest } from "./apiClient";
-import type { LoginPayload, LoginResponse, RegisterPayload, User } from "../types/auth";
+import type {
+  LoginPayload,
+  LoginResponse,
+  RegisterPayload,
+  User
+} from "../types/auth";
 
 // login mengirim kredensial dan menerima token JWT beserta profil user.
 export function login(payload: LoginPayload): Promise<LoginResponse> {

@@ -87,7 +87,7 @@ export function LoginPage() {
               value={password}
               visible={showPassword}
             />
-            <div className="mt-3 flex items-center justify-between gap-4">
+            <div className="mt-3 flex items-center gap-4">
               <label className="flex items-center gap-3 text-sm font-medium text-slate-600">
                 <input
                   checked={remember}
@@ -97,12 +97,6 @@ export function LoginPage() {
                 />
                 Ingat saya
               </label>
-              <button
-                className="border-0 bg-transparent p-0 text-sm font-semibold text-blue-700 transition hover:text-[#0a2a55]"
-                type="button"
-              >
-                Lupa password?
-              </button>
             </div>
           </div>
           <AuthSubmitButton disabled={submitting} icon={<LogIn className="h-5 w-5" />}>
