@@ -46,7 +46,7 @@ interface AuthTextInputProps extends InputHTMLAttributes<HTMLInputElement> {
 // AuthShell membentuk latar gambar dan grid utama untuk halaman login/register.
 export function AuthShell({ children }: AuthShellProps) {
   return (
-    <main className="relative h-screen max-h-screen overflow-hidden bg-white text-[#0a2a55]">
+    <main className="relative min-h-dvh overflow-y-auto bg-white text-[#0a2a55] lg:h-screen lg:max-h-screen lg:overflow-hidden">
       <img
         alt=""
         aria-hidden="true"
@@ -57,7 +57,7 @@ export function AuthShell({ children }: AuthShellProps) {
       <div className="absolute inset-0 bg-gradient-to-b from-white/25 via-white/10 to-white/90" />
       <div className="absolute -bottom-32 -left-24 h-72 w-[120%] rounded-[50%] bg-white/95" />
 
-      <section className="relative z-10 grid h-screen w-full grid-cols-1 items-center gap-5 overflow-hidden px-6 py-5 sm:px-10 lg:grid-cols-[minmax(0,1fr)_minmax(420px,520px)] lg:gap-10 lg:px-20 lg:py-8 xl:px-28">
+      <section className="relative z-10 grid min-h-dvh w-full grid-cols-1 content-center gap-5 px-4 py-6 sm:px-8 lg:h-screen lg:grid-cols-[minmax(0,1fr)_minmax(420px,520px)] lg:items-center lg:gap-10 lg:overflow-hidden lg:px-20 lg:py-8 xl:px-28">
         <div className="flex justify-center lg:justify-start">
           <AuthBrand />
         </div>
@@ -72,12 +72,12 @@ function AuthBrand() {
   return (
     <div className="flex flex-col items-center lg:items-start">
       <div className="flex items-center gap-3">
-        <Mountain className="h-11 w-11 text-[#c7902e] sm:h-14 sm:w-14" strokeWidth={1.7} />
-        <span className="font-serif text-3xl font-bold leading-tight text-[#0a2a55] sm:text-4xl xl:text-5xl">
+        <Mountain className="h-10 w-10 shrink-0 text-[#c7902e] sm:h-14 sm:w-14" strokeWidth={1.7} />
+        <span className="font-serif text-2xl font-bold leading-tight text-[#0a2a55] sm:text-4xl xl:text-5xl">
           SPK Hotel Kintamani
         </span>
       </div>
-      <span className="mt-2 text-center text-[11px] font-bold uppercase tracking-[0.32em] text-[#c7902e] sm:text-xs lg:pl-[72px] lg:text-left">
+      <span className="mt-2 text-center text-[10px] font-bold uppercase tracking-[0.22em] text-[#c7902e] sm:text-xs sm:tracking-[0.32em] lg:pl-[72px] lg:text-left">
         Sistem Pendukung Keputusan
       </span>
     </div>
@@ -87,15 +87,15 @@ function AuthBrand() {
 // AuthCard menampung judul, deskripsi, dan isi form autentikasi.
 export function AuthCard({ children, description, kicker, title }: AuthCardProps) {
   return (
-    <div className="rounded-2xl border border-slate-200/80 bg-white/85 p-5 shadow-[0_24px_70px_rgba(10,42,85,0.14)] backdrop-blur-xl sm:p-7 lg:p-9 xl:p-10">
+    <div className="rounded-xl border border-slate-200/80 bg-white/88 p-4 shadow-[0_24px_70px_rgba(10,42,85,0.14)] backdrop-blur-xl sm:rounded-2xl sm:p-7 lg:p-9 xl:p-10">
       <div className="text-center">
         <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#c7902e] sm:text-sm">
           {kicker}
         </span>
-        <h1 className="mt-4 font-serif text-3xl font-bold leading-tight text-[#0a2a55] sm:text-[34px]">
+        <h1 className="mt-3 font-serif text-2xl font-bold leading-tight text-[#0a2a55] sm:mt-4 sm:text-[34px]">
           {title}
         </h1>
-        <p className="mx-auto mt-3 max-w-[360px] text-sm leading-6 text-slate-600 sm:text-[15px]">
+        <p className="mx-auto mt-2 max-w-[360px] text-sm leading-6 text-slate-600 sm:mt-3 sm:text-[15px]">
           {description}
         </p>
       </div>
@@ -186,9 +186,9 @@ export function AuthSubmitButton({ children, disabled = false, icon }: AuthSubmi
 // AuthFooterLink menampilkan pemisah dan tautan perpindahan login/register.
 export function AuthFooterLink({ label, prompt, to }: AuthFooterLinkProps) {
   return (
-    <div className="mt-5 flex items-center gap-4">
+    <div className="mt-5 flex items-center gap-3">
       <span className="h-px flex-1 bg-slate-200" />
-      <p className="shrink-0 text-sm text-slate-500">
+      <p className="shrink-0 text-center text-sm text-slate-500">
         {prompt}{" "}
         <Link className="font-bold text-blue-700 transition hover:text-[#0a2a55]" to={to}>
           {label}

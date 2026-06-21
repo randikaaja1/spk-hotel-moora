@@ -22,14 +22,14 @@ export function LandingPage() {
   }
 
   return (
-    <main className="h-screen overflow-hidden bg-white">
+    <main className="h-dvh overflow-hidden bg-white">
       {/* Navigation */}
-      <header className="relative z-20 flex h-[82px] items-center justify-between border-b border-slate-900/10 bg-white/95 px-6 md:h-[86px] md:px-[5vw]">
+      <header className="relative z-20 flex h-[70px] items-center justify-between border-b border-slate-900/10 bg-white/95 px-4 sm:px-6 md:h-[86px] md:px-[5vw]">
         <Link
-          className="flex min-w-0 items-center gap-3 font-serif text-[22px] font-bold tracking-normal text-[#0a2a55] md:gap-4 md:text-[clamp(25px,2.4vw,34px)]"
+          className="flex min-w-0 items-center gap-2 font-serif text-lg font-bold tracking-normal text-[#0a2a55] sm:gap-3 sm:text-[22px] md:gap-4 md:text-[clamp(25px,2.4vw,34px)]"
           to="/"
         >
-          <Mountain className="h-9 w-9 shrink-0 text-[#c7902e] md:h-10 md:w-10" strokeWidth={1.8} />
+          <Mountain className="h-8 w-8 shrink-0 text-[#c7902e] sm:h-9 sm:w-9 md:h-10 md:w-10" strokeWidth={1.8} />
           <span className="truncate">SPK Hotel Kintamani</span>
         </Link>
 
@@ -40,7 +40,7 @@ export function LandingPage() {
           </a>
 
           <Link
-            className="inline-flex min-h-11 min-w-11 items-center justify-center gap-3 rounded-lg bg-[#0a2a55] px-4 font-bold text-white shadow-[0_12px_24px_rgba(10,42,85,0.2)] md:min-h-12 md:min-w-[120px] md:px-5"
+            className="inline-flex min-h-10 min-w-10 items-center justify-center gap-3 rounded-lg bg-[#0a2a55] px-3 font-bold text-white shadow-[0_12px_24px_rgba(10,42,85,0.2)] sm:min-h-11 sm:min-w-11 sm:px-4 md:min-h-12 md:min-w-[120px] md:px-5"
             to="/login"
           >
             <LockKeyhole className="h-5 w-5" />
@@ -51,19 +51,19 @@ export function LandingPage() {
 
       {/* Hero Section */}
       <section
-        className="relative h-[calc(100vh-82px)] overflow-hidden bg-cover bg-center md:h-[calc(100vh-86px)]"
+        className="relative h-[calc(100dvh-70px)] overflow-hidden bg-cover bg-center md:h-[calc(100dvh-86px)]"
         id="beranda"
         style={{ backgroundImage: `url(${heroImage})` }}
       >
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,#fff_0%,rgba(255,255,255,0.96)_23%,rgba(255,255,255,0.64)_43%,rgba(255,255,255,0.08)_72%),linear-gradient(180deg,rgba(255,255,255,0.25)_0%,rgba(255,255,255,0.7)_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,#fff_0%,rgba(255,255,255,0.96)_26%,rgba(255,255,255,0.72)_54%,rgba(255,255,255,0.16)_100%),linear-gradient(180deg,rgba(255,255,255,0.25)_0%,rgba(255,255,255,0.76)_100%)] md:bg-[linear-gradient(90deg,#fff_0%,rgba(255,255,255,0.96)_23%,rgba(255,255,255,0.64)_43%,rgba(255,255,255,0.08)_72%),linear-gradient(180deg,rgba(255,255,255,0.25)_0%,rgba(255,255,255,0.7)_100%)]" />
 
         {/* Hero Copy */}
-        <div className="relative z-10 grid max-w-[520px] gap-2 px-6 pt-5 md:px-0 md:pl-[5vw] md:pt-8 lg:pt-10">
+        <div className="relative z-10 grid max-w-[520px] gap-2 px-4 pt-5 sm:px-6 md:px-0 md:pl-[5vw] md:pt-8 lg:pt-10">
           <span className="text-xs font-extrabold uppercase tracking-[0.08em] text-[#c7902e] md:text-[15px]">
             Sistem Pendukung Keputusan
           </span>
 
-          <h1 className="m-0 font-serif text-[38px] font-bold leading-[1.04] tracking-normal text-[#0a2a55] md:text-[clamp(46px,5vw,62px)]">
+          <h1 className="m-0 font-serif text-[34px] font-bold leading-[1.04] tracking-normal text-[#0a2a55] min-[380px]:text-[38px] md:text-[clamp(46px,5vw,62px)]">
             Temukan Hotel
             <br />
             Terbaik di
@@ -73,7 +73,7 @@ export function LandingPage() {
 
           <span className="h-[3px] w-14 rounded-full bg-[#c7902e]" />
 
-          <p className="m-0 max-w-[500px] text-sm leading-[1.65] text-[#17345f] md:text-base">
+          <p className="m-0 max-w-[500px] text-sm leading-[1.55] text-[#17345f] md:text-base md:leading-[1.65]">
             SPK Hotel Kintamani membantu Anda mendapatkan rekomendasi hotel secara
             objektif dengan metode <strong className="text-[#c7902e]">MOORA.</strong>
           </p>
@@ -107,7 +107,7 @@ export function LandingPage() {
         </div>
 
         {/* Feature Cards */}
-        <div className="absolute right-4 top-[48%] z-10 grid w-[calc(100%-32px)] gap-2 md:right-8 md:top-[43%] md:w-[min(42vw,470px)] md:gap-3 lg:right-[clamp(28px,4vw,72px)] lg:top-[38%] lg:w-[min(38vw,470px)] lg:gap-4">
+        <div className="absolute inset-x-4 bottom-4 z-10 grid gap-2 md:inset-x-auto md:right-8 md:top-[43%] md:bottom-auto md:w-[min(42vw,470px)] md:gap-3 lg:right-[clamp(28px,4vw,72px)] lg:top-[38%] lg:w-[min(38vw,470px)] lg:gap-4">
           <FeatureCard
             description="Temukan hotel terbaik"
             icon={<Trophy className="h-5 w-5 md:h-[26px] md:w-[26px]" />}
@@ -145,9 +145,9 @@ function FeatureCard({
   title: string;
 }) {
   return (
-    <div className="relative flex min-h-[58px] min-w-0 items-center gap-3 rounded-lg border border-[#d7e0ec] bg-white/80 p-3 shadow-[0_18px_34px_rgba(15,23,42,0.09)] backdrop-blur-md md:min-h-[72px] md:gap-4 md:p-4 lg:min-h-[92px] lg:px-6 lg:py-4">
+    <div className="relative flex min-h-[54px] min-w-0 items-center gap-3 rounded-lg border border-[#d7e0ec] bg-white/82 p-3 shadow-[0_18px_34px_rgba(15,23,42,0.09)] backdrop-blur-md md:min-h-[72px] md:gap-4 md:p-4 lg:min-h-[92px] lg:px-6 lg:py-4">
       <span
-        className={`grid h-10 w-10 shrink-0 place-items-center rounded-full md:h-[42px] md:w-[42px] lg:h-14 lg:w-14 ${iconClassName}`}
+        className={`grid h-9 w-9 shrink-0 place-items-center rounded-full md:h-[42px] md:w-[42px] lg:h-14 lg:w-14 ${iconClassName}`}
       >
         {icon}
       </span>

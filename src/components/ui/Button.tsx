@@ -27,12 +27,12 @@ export function Button({
 }: ButtonProps) {
   return (
     <button
-      className={`inline-flex h-11 items-center justify-center gap-2 rounded-lg border px-4 text-sm font-bold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-65 ${variantClass[variant]} ${className}`}
+      className={`inline-flex h-11 min-w-0 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-bold transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-65 sm:px-4 ${variantClass[variant]} ${className}`}
       type={type}
       {...props}
     >
       {icon}
-      <span>{children}</span>
+      <span className="truncate">{children}</span>
     </button>
   );
 }

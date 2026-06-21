@@ -1,8 +1,10 @@
 import { FormEvent, useEffect, useState } from "react";
-import { Save } from "lucide-react";
+import { ListChecks, Save } from "lucide-react";
+import { RecommendationTable } from "../../../components/domain/RecommendationTable";
 import { Alert } from "../../../components/ui/Alert";
 import { Button } from "../../../components/ui/Button";
 import { Card } from "../../../components/ui/Card";
+import { EmptyState } from "../../../components/ui/EmptyState";
 import { InputField } from "../../../components/ui/FormField";
 import { LoadingState } from "../../../components/ui/LoadingState";
 import { PageHeader } from "../../../components/ui/PageHeader";
@@ -10,7 +12,9 @@ import {
   getLatestPreference,
   savePreference
 } from "../../../services/preferenceService";
+import { calculateRecommendation } from "../../../services/recommendationService";
 import type { PreferenceFilter } from "../../../types/preference";
+import type { RecommendationItem } from "../../../types/recommendation";
 
 type PreferenceFormState = Record<keyof PreferenceFilter, string>;
 type PreferenceFormErrors = Partial<Record<keyof PreferenceFilter, string>>;
@@ -29,6 +33,8 @@ export function UserPreferencesPage() {
   const [fieldErrors, setFieldErrors] = useState<PreferenceFormErrors>({});
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [rankingVisible, setRankingVisible] = useState(false);
+  const [results, setResults] = useState<RecommendationItem[]>([]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -57,7 +63,7 @@ export function UserPreferencesPage() {
     }
   }
 
-  // handleSubmit memvalidasi format angka lalu menyimpan preferensi user ke backend.
+  // handleSubmit menyimpan preferensi lalu menghitung ranking berdasarkan preferensi terbaru.
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitting(true);
@@ -74,9 +80,24 @@ export function UserPreferencesPage() {
 
     try {
       await savePreference(validation.payload);
-      setMessage("Preferensi berhasil disimpan.");
     } catch {
       setError("Preferensi belum berhasil disimpan.");
+      setSubmitting(false);
+      return;
+    }
+
+    try {
+      const recommendation = await calculateRecommendation({
+        preference: validation.payload,
+        save_result: true
+      });
+      setResults(recommendation.results);
+      setRankingVisible(true);
+      setMessage("Preferensi berhasil disimpan dan ranking diperbarui.");
+    } catch {
+      setResults([]);
+      setRankingVisible(true);
+      setError("Preferensi berhasil disimpan, tetapi belum ada ranking yang bisa ditampilkan.");
     } finally {
       setSubmitting(false);
     }
@@ -161,11 +182,36 @@ export function UserPreferencesPage() {
           </div>
           <div className="flex justify-end">
             <Button disabled={submitting} icon={<Save size={18} />} type="submit">
-              {submitting ? "Menyimpan" : "Simpan"}
+              {submitting ? "Memproses" : "Simpan"}
             </Button>
           </div>
         </form>
       </Card>
+
+      {rankingVisible ? (
+        <Card>
+          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="flex items-center gap-2 text-lg font-bold text-[#0a2a55]">
+                <ListChecks className="h-5 w-5 text-[#c7902e]" />
+                Hasil Ranking
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Urutan hotel dihitung dari preferensi yang baru Anda simpan.
+              </p>
+            </div>
+            <span className="inline-flex h-9 items-center rounded-full border border-blue-100 bg-blue-50 px-3 text-xs font-bold text-[#0a2a55]">
+              {results.length} hotel sesuai preferensi
+            </span>
+          </div>
+
+          {results.length > 0 ? (
+            <RecommendationTable results={results} />
+          ) : (
+            <EmptyState title="Belum ada hotel yang sesuai dengan preferensi." />
+          )}
+        </Card>
+      ) : null}
     </div>
   );
 }

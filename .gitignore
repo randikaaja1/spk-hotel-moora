@@ -5,3 +5,4 @@ dev-server.log
 *.tsbuildinfo
 vite.config.ts
 vite.config.d.ts
+*.gz

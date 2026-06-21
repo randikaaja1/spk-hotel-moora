@@ -15,7 +15,6 @@ import { ProfilePage } from "./pages/ProfilePage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { UserHotelsPage } from "./pages/user/HotelsPage";
 import { UserPreferencesPage } from "./pages/user/PreferencesPage";
-import { UserRecommendationsPage } from "./pages/user/RecommendationsPage";
 
 // App mendefinisikan seluruh route frontend SPK Hotel MOORA.
 export function App() {
@@ -40,7 +39,7 @@ export function App() {
         <Route element={<AppLayout />}>
           <Route element={<UserHotelsPage />} path="/hotels" />
           <Route element={<UserPreferencesPage />} path="/preferences" />
-          <Route element={<UserRecommendationsPage />} path="/recommendations" />
+          <Route element={<Navigate to="/preferences" replace />} path="/recommendations" />
         </Route>
       </Route>
 

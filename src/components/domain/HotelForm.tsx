@@ -160,7 +160,7 @@ export function HotelForm({
         />
         <InputField
           error={errors.location_score}
-          hint="Contoh: 4.2. Rentang 0 sampai 5."
+          hint="Contoh: 4.2. Rentang 0 sampai 5.(Rating Skor Berdasarkan Jarak dari Danau Batur)"
           inputMode="decimal"
           label="Skor lokasi"
           onChange={(event) => updateField("location_score", event.target.value)}

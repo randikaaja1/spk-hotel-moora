@@ -343,10 +343,10 @@ function MooraResultView() {
               <div className="space-y-3">
                 {results.slice(0, 5).map((item) => (
                   <div
-                    className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50/70 p-3"
+                    className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50/70 p-3 sm:flex-row sm:items-center sm:justify-between"
                     key={`${item.rank}-${item.hotel.id}-summary`}
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
                       <span
                         className={`grid h-10 w-10 shrink-0 place-items-center rounded-full text-sm font-black ${
                           item.rank === 1
@@ -356,15 +356,15 @@ function MooraResultView() {
                       >
                         #{item.rank}
                       </span>
-                      <div>
-                        <p className="font-bold text-[#0a2a55]">{item.hotel.name}</p>
+                      <div className="min-w-0">
+                        <p className="truncate font-bold text-[#0a2a55]">{item.hotel.name}</p>
                         <p className="text-xs text-slate-500">
                           Harga {formatCurrency(item.hotel.price)} | Rating{" "}
                           {formatNumber(item.hotel.rating_facility, 1)}
                         </p>
                       </div>
                     </div>
-                    <strong className="text-sm text-[#0a2a55]">
+                    <strong className="text-sm text-[#0a2a55] sm:text-right">
                       {formatNumber(item.preference_value, 5)}
                     </strong>
                   </div>
@@ -457,13 +457,15 @@ function ResultSummaryCard({
   }[tone];
 
   return (
-    <Card className="flex items-center gap-4">
-      <div className={`grid h-14 w-14 shrink-0 place-items-center rounded-full ${toneClass}`}>
+    <Card className="flex items-center gap-3 sm:gap-4">
+      <div className={`grid h-12 w-12 shrink-0 place-items-center rounded-full sm:h-14 sm:w-14 ${toneClass}`}>
         {icon}
       </div>
       <div className="min-w-0">
         <p className="text-sm font-semibold text-slate-500">{label}</p>
-        <p className="mt-2 truncate text-xl font-bold text-[#0a2a55]">{value}</p>
+        <p className="mt-2 line-clamp-2 break-words text-lg font-bold leading-tight text-[#0a2a55] sm:text-xl">
+          {value}
+        </p>
         <p className="mt-1 text-sm text-slate-500">{description}</p>
       </div>
     </Card>
@@ -491,13 +493,13 @@ function ProcessStatCard({
   }[tone];
 
   return (
-    <Card className="flex items-center gap-4">
-      <div className={`grid h-14 w-14 shrink-0 place-items-center rounded-full ${toneClass}`}>
+    <Card className="flex items-center gap-3 sm:gap-4">
+      <div className={`grid h-12 w-12 shrink-0 place-items-center rounded-full sm:h-14 sm:w-14 ${toneClass}`}>
         {icon}
       </div>
-      <div>
+      <div className="min-w-0">
         <p className="text-sm font-semibold text-slate-500">{label}</p>
-        <p className="mt-2 text-3xl font-bold text-[#0a2a55]">{value}</p>
+        <p className="mt-2 text-2xl font-bold text-[#0a2a55] sm:text-3xl">{value}</p>
         <p className="mt-1 text-sm text-slate-500">{description}</p>
       </div>
     </Card>

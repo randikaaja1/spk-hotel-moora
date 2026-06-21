@@ -52,8 +52,8 @@ export function DashboardHero({ name }: DashboardHeroProps) {
 
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-[#0a2a55]">
+      <div className="min-w-0">
+        <h1 className="break-words text-xl font-bold tracking-tight text-[#0a2a55] sm:text-2xl">
           Selamat datang, {name}
         </h1>
         <p className="mt-2 text-sm leading-6 text-slate-500">
@@ -61,8 +61,8 @@ export function DashboardHero({ name }: DashboardHeroProps) {
         </p>
       </div>
 
-      <div className="flex h-16 min-w-[220px] items-center gap-4 rounded-lg border border-slate-200 bg-white px-5 shadow-sm">
-        <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-blue-50 text-[#0a2a55]">
+      <div className="flex h-14 w-full items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 shadow-sm sm:h-16 sm:min-w-[220px] sm:w-auto sm:gap-4 sm:px-5">
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-[#0a2a55] sm:h-11 sm:w-11">
           <CalendarDays className="h-5 w-5" />
         </div>
         <div>
@@ -135,7 +135,7 @@ export function DashboardInsightGrid({
 
   return (
     <div className="grid gap-4 xl:grid-cols-2">
-      <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+      <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
         <div className="flex items-start gap-3">
           <div className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-700">
             <Gauge className="h-5 w-5" />
@@ -162,7 +162,7 @@ export function DashboardInsightGrid({
         )}
       </section>
 
-      <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+      <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
         <div className="flex items-start gap-3">
           <div
             className={`grid h-11 w-11 shrink-0 place-items-center rounded-lg ${
@@ -215,13 +215,13 @@ function MetricCard({
   value: number | string;
 }) {
   return (
-    <div className="flex min-h-[126px] items-center gap-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${iconTone}`}>
+    <div className="flex min-h-[112px] items-center gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:min-h-[126px] sm:gap-4">
+      <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full sm:h-12 sm:w-12 ${iconTone}`}>
         {icon}
       </div>
       <div className="min-w-0">
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p>
-        <p className="mt-2 line-clamp-2 break-words text-2xl font-bold leading-tight tracking-tight text-[#0a2a55]">
+        <p className="mt-2 line-clamp-2 break-words text-xl font-bold leading-tight tracking-tight text-[#0a2a55] sm:text-2xl">
           {value}
         </p>
         {actionLabel && to ? (
@@ -242,13 +242,13 @@ function DashboardRankingTable({ results }: DashboardRankingTableProps) {
   const topResults = results.slice(0, 5);
 
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
       <h2 className="text-lg font-bold text-[#0a2a55]">Top 5 Rekomendasi Hotel</h2>
       {topResults.length === 0 ? (
         <EmptyRecommendation label="Belum ada ranking. Jalankan perhitungan MOORA terlebih dahulu." />
       ) : (
         <div className="mt-5 overflow-hidden rounded-lg border border-slate-100">
-          <div className="grid grid-cols-[60px_minmax(0,1fr)_150px] bg-slate-50 px-4 py-3 text-[11px] font-bold uppercase text-slate-500">
+          <div className="grid grid-cols-[44px_minmax(0,1fr)_90px] bg-slate-50 px-3 py-3 text-[10px] font-bold uppercase text-slate-500 sm:grid-cols-[60px_minmax(0,1fr)_150px] sm:px-4 sm:text-[11px]">
             <span>Rank</span>
             <span>Hotel</span>
             <span className="text-right">Nilai Preferensi</span>
@@ -256,7 +256,7 @@ function DashboardRankingTable({ results }: DashboardRankingTableProps) {
           <div className="divide-y divide-slate-100">
             {topResults.map((item, index) => (
               <div
-                className="grid grid-cols-[60px_minmax(0,1fr)_150px] items-center px-4 py-3"
+                className="grid grid-cols-[44px_minmax(0,1fr)_90px] items-center px-3 py-3 sm:grid-cols-[60px_minmax(0,1fr)_150px] sm:px-4"
                 key={`${item.rank}-${item.hotel.id}`}
               >
                 <span
@@ -266,15 +266,15 @@ function DashboardRankingTable({ results }: DashboardRankingTableProps) {
                 >
                   {item.rank}
                 </span>
-                <div className="flex min-w-0 items-center gap-4">
+                <div className="flex min-w-0 items-center gap-2 sm:gap-4">
                   <img
                     alt=""
-                    className="h-10 w-16 rounded-md object-cover"
+                    className="hidden h-10 w-16 rounded-md object-cover sm:block"
                     src={heroImage}
                   />
                   <span className="truncate text-sm font-bold text-[#0a2a55]">{item.hotel.name}</span>
                 </div>
-                <span className="text-right text-sm font-bold text-[#0a2a55]">
+                <span className="text-right text-xs font-bold text-[#0a2a55] sm:text-sm">
                   {formatNumber(item.preference_value, 5)}
                 </span>
               </div>

@@ -5,7 +5,6 @@ import {
   ClipboardList,
   Gauge,
   Hotel,
-  ListChecks,
   Mountain,
   Scale,
   SlidersHorizontal,
@@ -64,11 +63,7 @@ const userSections: SidebarSection[] = [
   },
   {
     title: "Preferensi",
-    items: [{ to: "/preferences", label: "Bobot Kriteria", icon: SlidersHorizontal }]
-  },
-  {
-    title: "Hasil",
-    items: [{ to: "/recommendations", label: "Hasil Ranking", icon: ListChecks }]
+    items: [{ to: "/preferences", label: "Preferensi & Ranking", icon: SlidersHorizontal }]
   },
   {
     title: "Pengaturan",
@@ -103,6 +98,23 @@ export function Sidebar() {
 
       <LogoutButton className="mt-6 h-12 w-full justify-start border-slate-200 bg-white text-slate-700 shadow-sm hover:border-red-100 hover:bg-red-50 hover:text-red-600" />
     </aside>
+  );
+}
+
+// MobileNav menyediakan navigasi bawah agar halaman mudah dipakai pada layar kecil.
+export function MobileNav() {
+  const { user } = useAuth();
+  const sections = user?.role === "admin" ? adminSections : userSections;
+  const items = sections.flatMap((section) => section.items);
+
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-2 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 shadow-[0_-18px_42px_rgba(10,42,85,0.08)] backdrop-blur lg:hidden">
+      <div className="flex gap-1 overflow-x-auto">
+        {items.map((item) => (
+          <MobileNavLink item={item} key={item.label} />
+        ))}
+      </div>
+    </nav>
   );
 }
 
@@ -142,6 +154,26 @@ function SidebarNavLink({ item }: { item: SidebarItem }) {
     >
       <Icon className="h-5 w-5 shrink-0" />
       <span>{item.label}</span>
+    </Link>
+  );
+}
+
+// MobileNavLink memberi status aktif pada item navigasi bawah.
+function MobileNavLink({ item }: { item: SidebarItem }) {
+  const Icon = item.icon;
+  const location = useLocation();
+  const currentTarget = `${location.pathname}${location.search}`;
+  const isActive = currentTarget === item.to;
+
+  return (
+    <Link
+      className={`flex min-w-[86px] flex-1 flex-col items-center justify-center gap-1 rounded-lg px-2 py-2 text-[11px] font-bold transition ${
+        isActive ? "bg-[#0a2a55] text-white" : "text-slate-500 hover:bg-blue-50 hover:text-[#0a2a55]"
+      }`}
+      to={item.to}
+    >
+      <Icon className="h-5 w-5 shrink-0" />
+      <span className="max-w-full truncate">{item.label}</span>
     </Link>
   );
 }
