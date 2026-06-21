@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Pencil, Plus, Trash2, X } from "lucide-react";
+import { ExternalLink, Pencil, Plus, Trash2, X } from "lucide-react";
 import { HotelForm } from "../../../components/domain/HotelForm";
 import { Alert } from "../../../components/ui/Alert";
 import { Badge } from "../../../components/ui/Badge";
@@ -146,9 +146,9 @@ export function AdminHotelsPage() {
               <thead>
                 <tr>
                   <th>Hotel</th>
-                  <th>Jarak</th>
+                  <th>Lokasi</th>
                   {criteria.map((criterion) => (
-                    <th key={criterion.id}>{criterion.code}</th>
+                    <th key={criterion.id}>{criterion.name}</th>
                   ))}
                   <th>Aksi</th>
                 </tr>
@@ -162,7 +162,9 @@ export function AdminHotelsPage() {
                         {hotel.description || "-"}
                       </span>
                     </td>
-                    <td>{formatNumber(hotel.distance_km, 1)} km</td>
+                    <td>
+                      <GoogleMapsLink url={hotel.google_maps_url} />
+                    </td>
                     {criteria.map((criterion) => (
                       <td key={`${hotel.id}-${criterion.id}`}>
                         {formatHotelCriterionValue(hotel, criterion)}
@@ -236,6 +238,25 @@ export function AdminHotelsPage() {
         </div>
       ) : null}
     </div>
+  );
+}
+
+// GoogleMapsLink menampilkan lokasi hotel sebagai tautan Google Maps.
+function GoogleMapsLink({ url }: { url?: string }) {
+  if (!url) {
+    return <span className="text-sm text-slate-400">-</span>;
+  }
+
+  return (
+    <a
+      className="inline-flex items-center gap-1.5 text-sm font-bold text-blue-700 transition hover:text-[#0a2a55]"
+      href={url}
+      rel="noreferrer"
+      target="_blank"
+    >
+      <ExternalLink className="h-4 w-4" />
+      <span>Buka Maps</span>
+    </a>
   );
 }
 

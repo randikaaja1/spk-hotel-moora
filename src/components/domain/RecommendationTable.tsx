@@ -20,10 +20,10 @@ export function RecommendationTable({ results }: { results: RecommendationItem[]
             <th>Rank</th>
             <th>Hotel</th>
             {scoreHeaders.length > 0 ? (
-              scoreHeaders.map((score) => <th key={score.criterion_id}>{score.code}</th>)
+              scoreHeaders.map((score) => <th key={score.criterion_id}>{score.name}</th>)
             ) : hotelCriterionHeaders.length > 0 ? (
               hotelCriterionHeaders.map((criterion) => (
-                <th key={criterion.criterion_id}>{criterion.code}</th>
+                <th key={criterion.criterion_id}>{criterion.name}</th>
               ))
             ) : (
               <>

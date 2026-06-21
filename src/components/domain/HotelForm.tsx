@@ -7,10 +7,10 @@ import type { Hotel, SaveHotelPayload } from "../../types/hotel";
 
 type HotelBaseField =
   | "name"
+  | "google_maps_url"
   | "price"
   | "rating_facility"
   | "accessibility"
-  | "distance_km"
   | "location_score"
   | "view_score"
   | "description";
@@ -21,10 +21,10 @@ type CriterionFormErrors = Record<number, string | undefined>;
 
 const emptyForm: HotelFormState = {
   name: "",
+  google_maps_url: "",
   price: "",
   rating_facility: "",
   accessibility: "",
-  distance_km: "",
   location_score: "",
   view_score: "",
   description: ""
@@ -65,10 +65,10 @@ export function HotelForm({
 
     setForm({
       name: initialData.name,
+      google_maps_url: initialData.google_maps_url ?? "",
       price: String(initialData.price),
       rating_facility: String(initialData.rating_facility),
       accessibility: String(initialData.accessibility),
-      distance_km: String(initialData.distance_km),
       location_score: String(initialData.location_score),
       view_score: String(initialData.view_score),
       description: initialData.description
@@ -118,6 +118,16 @@ export function HotelForm({
         value={form.name}
       />
       <InputField
+        error={errors.google_maps_url}
+        hint="Tempel link Google Maps hotel, contoh: https://maps.app.goo.gl/xxxx."
+        label="Lokasi"
+        onChange={(event) => updateField("google_maps_url", event.target.value)}
+        placeholder="https://maps.app.goo.gl/..."
+        required
+        type="url"
+        value={form.google_maps_url}
+      />
+      <InputField
         error={errors.price}
         hint="Contoh: 450000. Tulis angka saja, tanpa Rp, titik, atau koma."
         inputMode="numeric"
@@ -147,16 +157,6 @@ export function HotelForm({
           placeholder="4.0"
           required
           value={form.accessibility}
-        />
-        <InputField
-          error={errors.distance_km}
-          hint="Contoh: 2.5. Jarak dalam kilometer, minimal 0."
-          inputMode="decimal"
-          label="Jarak km"
-          onChange={(event) => updateField("distance_km", event.target.value)}
-          placeholder="2.5"
-          required
-          value={form.distance_km}
         />
         <InputField
           error={errors.location_score}
@@ -240,6 +240,7 @@ function validateHotelForm(
   const errors: HotelFormErrors = {};
   const criterionErrors: CriterionFormErrors = {};
   const name = form.name.trim();
+  const googleMapsURL = parseLocationURL(form.google_maps_url, errors);
   const description = form.description.trim();
   const price = parseWholeNumber(form.price, "Harga", errors, "price");
   const ratingFacility = parseDecimalRange(
@@ -258,7 +259,6 @@ function validateHotelForm(
     0,
     5
   );
-  const distanceKm = parseDecimalRange(form.distance_km, "Jarak", errors, "distance_km", 0);
   const locationScore = parseDecimalRange(
     form.location_score,
     "Skor lokasi",
@@ -279,7 +279,7 @@ function validateHotelForm(
 
   const baseValues = {
     accessibility,
-    distance_km: distanceKm,
+    distance_km: 0,
     location_score: locationScore,
     price,
     rating_facility: ratingFacility,
@@ -303,7 +303,8 @@ function validateHotelForm(
       price,
       rating_facility: ratingFacility,
       accessibility,
-      distance_km: distanceKm,
+      distance_km: 0,
+      google_maps_url: googleMapsURL,
       location_score: locationScore,
       view_score: viewScore,
       description,
@@ -334,7 +335,7 @@ function resolveCriterionPayloadValue(
   criterionForm: CriterionFormState,
   baseValues: Pick<
     SaveHotelPayload,
-    "accessibility" | "distance_km" | "location_score" | "price" | "rating_facility" | "view_score"
+    "accessibility" | "location_score" | "price" | "rating_facility" | "view_score"
   >,
   criterionErrors: CriterionFormErrors
 ) {
@@ -345,8 +346,6 @@ function resolveCriterionPayloadValue(
       return baseValues.rating_facility;
     case "accessibility":
       return baseValues.accessibility;
-    case "distance":
-      return baseValues.distance_km;
     case "location":
       return baseValues.location_score;
     case "view":
@@ -382,6 +381,29 @@ function parseWholeNumber(
   }
 
   return parsed;
+}
+
+// parseLocationURL memvalidasi input lokasi agar berupa link http atau https.
+function parseLocationURL(value: string, errors: HotelFormErrors) {
+  const normalized = value.trim();
+
+  if (!normalized) {
+    errors.google_maps_url = "Lokasi wajib diisi dengan link Google Maps.";
+    return "";
+  }
+
+  try {
+    const parsedURL = new URL(normalized);
+    if (parsedURL.protocol !== "http:" && parsedURL.protocol !== "https:") {
+      errors.google_maps_url = "Lokasi harus berupa link http atau https.";
+      return "";
+    }
+  } catch {
+    errors.google_maps_url = "Lokasi harus berupa URL valid, contoh https://maps.app.goo.gl/xxxx.";
+    return "";
+  }
+
+  return normalized;
 }
 
 // parseDecimalRange memvalidasi angka desimal dengan titik dan batas nilai tertentu.
@@ -457,7 +479,6 @@ function getLegacyCriterionKey(criterion: Criterion) {
   if (name.includes("biaya") || name.includes("harga")) return "price";
   if (name.includes("fasilitas") || name.includes("rating")) return "rating";
   if (name.includes("akses")) return "accessibility";
-  if (name.includes("jarak")) return "distance";
   if (name.includes("lokasi")) return "location";
   if (name.includes("view")) return "view";
 

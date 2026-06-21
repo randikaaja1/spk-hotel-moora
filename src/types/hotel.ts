@@ -5,6 +5,7 @@ export interface Hotel {
   rating_facility: number;
   accessibility: number;
   distance_km: number;
+  google_maps_url: string;
   location_score: number;
   view_score: number;
   description: string;
@@ -27,6 +28,7 @@ export interface SaveHotelPayload {
   rating_facility: number;
   accessibility: number;
   distance_km: number;
+  google_maps_url: string;
   location_score: number;
   view_score: number;
   description: string;

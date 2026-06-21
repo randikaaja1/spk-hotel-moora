@@ -557,7 +557,7 @@ function MooraMatrixCard({
               <th>Hotel</th>
               {criteria.map((criterion) => (
                 <th key={`${mode}-${criterion.code}`}>
-                  {criterion.code}
+                  {criterion.name}
                   <span className="mt-1 block text-[10px] normal-case text-slate-400">
                     {criterion.attribute}
                   </span>
