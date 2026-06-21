@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
-import { LogOut, Mail, Shield, UserRound } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { Button } from "../../components/ui/Button";
+import { Mail, Shield, UserRound } from "lucide-react";
+import { LogoutButton } from "../../components/layout/LogoutButton";
 import { Card } from "../../components/ui/Card";
 import { PageHeader } from "../../components/ui/PageHeader";
 import { useAuth } from "../../context/AuthContext";
@@ -9,14 +8,7 @@ import { formatDateTime } from "../../utils/formatters";
 
 // ProfilePage menampilkan identitas akun yang sedang login.
 export function ProfilePage() {
-  const { logout, user } = useAuth();
-  const navigate = useNavigate();
-
-  // handleLogout mengakhiri sesi dan mengarahkan user ke halaman login.
-  function handleLogout() {
-    logout();
-    navigate("/login", { replace: true });
-  }
+  const { user } = useAuth();
 
   return (
     <div className="space-y-5">
@@ -36,9 +28,7 @@ export function ProfilePage() {
               <p className="mt-1 text-sm text-slate-500">{user?.email || "-"}</p>
             </div>
           </div>
-          <Button icon={<LogOut className="h-4 w-4" />} onClick={handleLogout} variant="danger">
-            Logout
-          </Button>
+          <LogoutButton />
         </div>
 
         <div className="mt-8 grid gap-4 md:grid-cols-3">

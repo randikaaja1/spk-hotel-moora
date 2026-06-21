@@ -6,7 +6,6 @@ import {
   Gauge,
   Hotel,
   ListChecks,
-  LogOut,
   Mountain,
   Scale,
   SlidersHorizontal,
@@ -17,6 +16,7 @@ import type { LucideIcon } from "lucide-react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import type { Role } from "../../types/api";
+import { LogoutButton } from "./LogoutButton";
 
 type SidebarItem = {
   to: string;
@@ -78,7 +78,7 @@ const userSections: SidebarSection[] = [
 
 // Sidebar menampilkan navigasi utama sesuai role user.
 export function Sidebar() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const sections = user?.role === "admin" ? adminSections : userSections;
 
   return (
@@ -101,14 +101,7 @@ export function Sidebar() {
         ))}
       </nav>
 
-      <button
-        className="mt-6 flex h-12 w-full items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 shadow-sm transition hover:border-red-100 hover:bg-red-50 hover:text-red-600"
-        onClick={logout}
-        type="button"
-      >
-        <LogOut className="h-5 w-5" />
-        <span>Logout</span>
-      </button>
+      <LogoutButton className="mt-6 h-12 w-full justify-start border-slate-200 bg-white text-slate-700 shadow-sm hover:border-red-100 hover:bg-red-50 hover:text-red-600" />
     </aside>
   );
 }
