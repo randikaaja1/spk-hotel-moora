@@ -6,6 +6,7 @@
 *.out
 bin/
 dist/
+spk-hotel-moora-api
 
 # Dependency and tooling cache
 vendor/

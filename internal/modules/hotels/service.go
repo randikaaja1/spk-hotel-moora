@@ -2,6 +2,7 @@ package hotels
 
 import (
 	"context"
+	"net/url"
 	"strings"
 
 	"spk-hotel-moora-service-go/internal/modules/criteria"
@@ -105,6 +106,7 @@ func (s *Service) Delete(ctx context.Context, id int64) error {
 func buildHotelFromRequest(request SaveHotelRequest, criterionItems []criteria.Criterion) (*Hotel, error) {
 	name := strings.TrimSpace(request.Name)
 	description := strings.TrimSpace(request.Description)
+	googleMapsURL := strings.TrimSpace(request.GoogleMapsURL)
 	criterionValues, err := buildCriterionValuesFromRequest(request, criterionItems)
 	if err != nil {
 		return nil, err
@@ -116,6 +118,7 @@ func buildHotelFromRequest(request SaveHotelRequest, criterionItems []criteria.C
 		RatingFacility:  request.RatingFacility,
 		Accessibility:   request.Accessibility,
 		DistanceKM:      request.DistanceKM,
+		GoogleMapsURL:   googleMapsURL,
 		LocationScore:   request.LocationScore,
 		ViewScore:       request.ViewScore,
 		Description:     description,
@@ -126,6 +129,7 @@ func buildHotelFromRequest(request SaveHotelRequest, criterionItems []criteria.C
 
 	if name == "" ||
 		hotel.Price <= 0 ||
+		!isValidLocationURL(hotel.GoogleMapsURL) ||
 		!isOptionalScoreInRange(hotel.RatingFacility) ||
 		!isOptionalScoreInRange(hotel.Accessibility) ||
 		hotel.DistanceKM < 0 ||
@@ -135,6 +139,16 @@ func buildHotelFromRequest(request SaveHotelRequest, criterionItems []criteria.C
 	}
 
 	return hotel, nil
+}
+
+// isValidLocationURL memastikan lokasi hotel diisi dalam format URL yang dapat dibuka.
+func isValidLocationURL(value string) bool {
+	parsedURL, err := url.ParseRequestURI(value)
+	if err != nil {
+		return false
+	}
+
+	return parsedURL.Scheme == "http" || parsedURL.Scheme == "https"
 }
 
 // buildCriterionValuesFromRequest menyusun nilai hotel untuk seluruh kriteria aktif.

@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS hotels (
     rating_facility DECIMAL(4, 2) NOT NULL,
     accessibility DECIMAL(4, 2) NOT NULL,
     distance_km DECIMAL(8, 2) NOT NULL,
+    google_maps_url VARCHAR(500) NULL,
     location_score DECIMAL(4, 2) NOT NULL,
     view_score DECIMAL(4, 2) NOT NULL,
     description TEXT NULL,

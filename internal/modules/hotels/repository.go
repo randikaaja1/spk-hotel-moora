@@ -23,7 +23,7 @@ func NewRepository(db *sql.DB) *Repository {
 func (r *Repository) FindAll(ctx context.Context) ([]Hotel, error) {
 	query := `
 		SELECT id, name, price, rating_facility, accessibility, distance_km,
-			location_score, view_score, COALESCE(description, ''), created_at, updated_at
+			COALESCE(google_maps_url, ''), location_score, view_score, COALESCE(description, ''), created_at, updated_at
 		FROM hotels
 		ORDER BY id DESC
 	`
@@ -59,7 +59,7 @@ func (r *Repository) FindAll(ctx context.Context) ([]Hotel, error) {
 func (r *Repository) FindByID(ctx context.Context, id int64) (*Hotel, error) {
 	query := `
 		SELECT id, name, price, rating_facility, accessibility, distance_km,
-			location_score, view_score, COALESCE(description, ''), created_at, updated_at
+			COALESCE(google_maps_url, ''), location_score, view_score, COALESCE(description, ''), created_at, updated_at
 		FROM hotels
 		WHERE id = ?
 		LIMIT 1
@@ -73,6 +73,7 @@ func (r *Repository) FindByID(ctx context.Context, id int64) (*Hotel, error) {
 		&hotel.RatingFacility,
 		&hotel.Accessibility,
 		&hotel.DistanceKM,
+		&hotel.GoogleMapsURL,
 		&hotel.LocationScore,
 		&hotel.ViewScore,
 		&hotel.Description,
@@ -108,9 +109,9 @@ func (r *Repository) Create(ctx context.Context, hotel *Hotel) error {
 	query := `
 		INSERT INTO hotels (
 			name, price, rating_facility, accessibility, distance_km,
-			location_score, view_score, description
+			google_maps_url, location_score, view_score, description
 		)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
 	result, err := tx.ExecContext(
@@ -121,6 +122,7 @@ func (r *Repository) Create(ctx context.Context, hotel *Hotel) error {
 		hotel.RatingFacility,
 		hotel.Accessibility,
 		hotel.DistanceKM,
+		hotel.GoogleMapsURL,
 		hotel.LocationScore,
 		hotel.ViewScore,
 		hotel.Description,
@@ -158,7 +160,7 @@ func (r *Repository) Update(ctx context.Context, hotel *Hotel) error {
 	query := `
 		UPDATE hotels
 		SET name = ?, price = ?, rating_facility = ?, accessibility = ?,
-			distance_km = ?, location_score = ?, view_score = ?, description = ?
+			distance_km = ?, google_maps_url = ?, location_score = ?, view_score = ?, description = ?
 		WHERE id = ?
 	`
 
@@ -170,6 +172,7 @@ func (r *Repository) Update(ctx context.Context, hotel *Hotel) error {
 		hotel.RatingFacility,
 		hotel.Accessibility,
 		hotel.DistanceKM,
+		hotel.GoogleMapsURL,
 		hotel.LocationScore,
 		hotel.ViewScore,
 		hotel.Description,
@@ -241,6 +244,7 @@ func scanHotel(rows *sql.Rows, hotel *Hotel) error {
 		&hotel.RatingFacility,
 		&hotel.Accessibility,
 		&hotel.DistanceKM,
+		&hotel.GoogleMapsURL,
 		&hotel.LocationScore,
 		&hotel.ViewScore,
 		&hotel.Description,

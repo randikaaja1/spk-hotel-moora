@@ -9,6 +9,7 @@ type Hotel struct {
 	RatingFacility  float64
 	Accessibility   float64
 	DistanceKM      float64
+	GoogleMapsURL   string
 	LocationScore   float64
 	ViewScore       float64
 	Description     string
@@ -32,6 +33,7 @@ type HotelResponse struct {
 	RatingFacility  float64                       `json:"rating_facility"`
 	Accessibility   float64                       `json:"accessibility"`
 	DistanceKM      float64                       `json:"distance_km"`
+	GoogleMapsURL   string                        `json:"google_maps_url"`
 	LocationScore   float64                       `json:"location_score"`
 	ViewScore       float64                       `json:"view_score"`
 	Description     string                        `json:"description"`
@@ -54,6 +56,7 @@ type SaveHotelRequest struct {
 	RatingFacility  float64                          `json:"rating_facility"`
 	Accessibility   float64                          `json:"accessibility"`
 	DistanceKM      float64                          `json:"distance_km"`
+	GoogleMapsURL   string                           `json:"google_maps_url"`
 	LocationScore   float64                          `json:"location_score"`
 	ViewScore       float64                          `json:"view_score"`
 	Description     string                           `json:"description"`
@@ -74,6 +77,7 @@ func (h *Hotel) ToResponse() HotelResponse {
 		RatingFacility:  h.RatingFacility,
 		Accessibility:   h.Accessibility,
 		DistanceKM:      h.DistanceKM,
+		GoogleMapsURL:   h.GoogleMapsURL,
 		LocationScore:   h.LocationScore,
 		ViewScore:       h.ViewScore,
 		Description:     h.Description,
