@@ -298,8 +298,8 @@ function MooraResultView() {
       ) : results.length === 0 ? (
         <EmptyState title="Belum ada hasil ranking." />
       ) : (
-        <div className="grid gap-5">
-          <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid min-w-0 gap-4">
+          <div className="grid min-w-0 gap-3 md:grid-cols-4">
             <ResultSummaryCard
               description={
                 bestResult ? `Yi ${formatNumber(bestResult.preference_value, 5)}` : "Belum tersedia."
@@ -332,9 +332,9 @@ function MooraResultView() {
             />
           </div>
 
-          <div className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
-            <Card>
-              <div className="mb-5">
+          <div className="grid min-w-0 items-start gap-4 xl:grid-cols-[0.9fr_1.1fr]">
+            <Card className="min-w-0 self-start">
+              <div className="mb-4">
                 <h2 className="text-lg font-bold text-[#0a2a55]">Ringkasan Ranking</h2>
                 <p className="mt-1 text-sm text-slate-500">
                   Lima hotel teratas dari hasil perhitungan MOORA terbaru.
@@ -372,8 +372,8 @@ function MooraResultView() {
               </div>
             </Card>
 
-            <Card>
-              <div className="mb-5">
+            <Card className="min-w-0 self-start overflow-hidden">
+              <div className="mb-4">
                 <h2 className="text-lg font-bold text-[#0a2a55]">Grafik Ranking</h2>
                 <p className="mt-1 text-sm text-slate-500">
                   Visualisasi nilai preferensi hotel berdasarkan hasil MOORA terbaru.
@@ -384,8 +384,8 @@ function MooraResultView() {
           </div>
 
           {hasScoreDetail ? (
-            <Card>
-              <div className="mb-5">
+            <Card className="min-w-0">
+              <div className="mb-4">
                 <h2 className="text-lg font-bold text-[#0a2a55]">Detail Nilai Akhir</h2>
                 <p className="mt-1 text-sm text-slate-500">
                   Pembentuk nilai Yi dari total benefit dikurangi total cost.
@@ -420,8 +420,8 @@ function MooraResultView() {
             </Card>
           ) : null}
 
-          <Card>
-            <div className="mb-5">
+          <Card className="min-w-0">
+            <div className="mb-4">
               <h2 className="text-lg font-bold text-[#0a2a55]">Tabel Ranking</h2>
               <p className="mt-1 text-sm text-slate-500">
                 Urutan lengkap hotel dari nilai preferensi tertinggi.

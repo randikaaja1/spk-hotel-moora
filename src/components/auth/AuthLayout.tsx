@@ -87,7 +87,7 @@ function AuthBrand() {
 // AuthCard menampung judul, deskripsi, dan isi form autentikasi.
 export function AuthCard({ children, description, kicker, title }: AuthCardProps) {
   return (
-    <div className="rounded-xl border border-slate-200/80 bg-white/88 p-4 shadow-[0_24px_70px_rgba(10,42,85,0.14)] backdrop-blur-xl sm:rounded-2xl sm:p-7 lg:p-9 xl:p-10">
+    <div className="rounded-xl border border-slate-200/80 bg-white/20 p-4 shadow-[0_24px_70px_rgba(10,42,85,0.14)] backdrop-blur-xl sm:rounded-2xl sm:p-7 lg:p-9 xl:p-10">
       <div className="text-center">
         <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#c7902e] sm:text-sm">
           {kicker}

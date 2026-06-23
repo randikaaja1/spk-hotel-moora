@@ -163,9 +163,9 @@ export function UserPreferencesPage() {
             />
             <InputField
               error={fieldErrors.max_distance}
-              hint="Contoh: 5.5. Jarak maksimal dalam kilometer, minimal 0."
+              hint="Contoh: 1.1. Skor jarak semakin besar maka semakin dekat dengan danau batur. Rentang 0 sampai 5."
               inputMode="decimal"
-              label="Jarak maksimal"
+              label="Jarak minimum"
               onChange={(event) => updateField("max_distance", event.target.value)}
               placeholder="5.5"
               value={form.max_distance}
