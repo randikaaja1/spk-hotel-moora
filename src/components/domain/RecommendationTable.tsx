@@ -30,7 +30,7 @@ export function RecommendationTable({ results }: { results: RecommendationItem[]
                 <th>Harga</th>
                 <th>Fasilitas</th>
                 <th>Akses</th>
-                <th>Lokasi</th>
+                <th>Jarak</th>
                 <th>View</th>
               </>
             )}
@@ -67,7 +67,7 @@ export function RecommendationTable({ results }: { results: RecommendationItem[]
                   <td>{formatCurrency(item.hotel.price)}</td>
                   <td>{formatNumber(item.hotel.rating_facility, 1)}</td>
                   <td>{formatNumber(item.hotel.accessibility, 1)}</td>
-                  <td>{formatNumber(item.hotel.location_score, 1)}</td>
+                  <td>{formatNumber(item.hotel.distance_km, 1)} km</td>
                   <td>{formatNumber(item.hotel.view_score, 1)}</td>
                 </>
               )}
@@ -91,7 +91,7 @@ function formatScoreRawValue(score: CriterionScore | undefined) {
     return formatCurrency(score.raw_value);
   }
 
-  if (name.includes("jarak")) {
+  if (score.code.trim().toUpperCase() === "C4" || name.includes("jarak")) {
     return `${formatNumber(score.raw_value, 1)} km`;
   }
 
@@ -109,7 +109,7 @@ function formatHotelCriterionValue(value: HotelCriterionValue | undefined) {
     return formatCurrency(value.value);
   }
 
-  if (name.includes("jarak")) {
+  if (value.code.trim().toUpperCase() === "C4" || name.includes("jarak")) {
     return `${formatNumber(value.value, 1)} km`;
   }
 

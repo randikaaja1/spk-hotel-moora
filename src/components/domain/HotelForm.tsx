@@ -11,7 +11,7 @@ type HotelBaseField =
   | "price"
   | "rating_facility"
   | "accessibility"
-  | "location_score"
+  | "distance_km"
   | "view_score"
   | "description";
 type HotelFormState = Record<HotelBaseField, string>;
@@ -25,7 +25,7 @@ const emptyForm: HotelFormState = {
   price: "",
   rating_facility: "",
   accessibility: "",
-  location_score: "",
+  distance_km: "",
   view_score: "",
   description: ""
 };
@@ -69,7 +69,7 @@ export function HotelForm({
       price: String(initialData.price),
       rating_facility: String(initialData.rating_facility),
       accessibility: String(initialData.accessibility),
-      location_score: String(initialData.location_score),
+      distance_km: String(initialData.distance_km),
       view_score: String(initialData.view_score),
       description: initialData.description
     });
@@ -119,11 +119,10 @@ export function HotelForm({
       />
       <InputField
         error={errors.google_maps_url}
-        hint="Tempel link Google Maps hotel, contoh: https://maps.app.goo.gl/xxxx."
-        label="Lokasi"
+        hint="Opsional. Tempel link Google Maps hotel, contoh: https://maps.app.goo.gl/xxxx."
+        label="Link Google Maps"
         onChange={(event) => updateField("google_maps_url", event.target.value)}
         placeholder="https://maps.app.goo.gl/..."
-        required
         type="url"
         value={form.google_maps_url}
       />
@@ -159,14 +158,14 @@ export function HotelForm({
           value={form.accessibility}
         />
         <InputField
-          error={errors.location_score}
-          hint="Contoh: 4.2. Rentang 0 sampai 5.(Rating Skor Berdasarkan Jarak dari Danau Batur)"
+          error={errors.distance_km}
+          hint="Contoh: 2.5. Jarak sebenarnya dalam kilometer, gunakan titik untuk desimal."
           inputMode="decimal"
-          label="Skor lokasi"
-          onChange={(event) => updateField("location_score", event.target.value)}
-          placeholder="4.2"
+          label="Jarak (km)"
+          onChange={(event) => updateField("distance_km", event.target.value)}
+          placeholder="2.5"
           required
-          value={form.location_score}
+          value={form.distance_km}
         />
         <InputField
           error={errors.view_score}
@@ -240,7 +239,7 @@ function validateHotelForm(
   const errors: HotelFormErrors = {};
   const criterionErrors: CriterionFormErrors = {};
   const name = form.name.trim();
-  const googleMapsURL = parseLocationURL(form.google_maps_url, errors);
+  const googleMapsURL = parseOptionalLocationURL(form.google_maps_url, errors);
   const description = form.description.trim();
   const price = parseWholeNumber(form.price, "Harga", errors, "price");
   const ratingFacility = parseDecimalRange(
@@ -259,13 +258,12 @@ function validateHotelForm(
     0,
     5
   );
-  const locationScore = parseDecimalRange(
-    form.location_score,
-    "Skor lokasi",
+  const distanceKM = parseDecimalRange(
+    form.distance_km,
+    "Jarak",
     errors,
-    "location_score",
-    0,
-    5
+    "distance_km",
+    0.01
   );
   const viewScore = parseDecimalRange(form.view_score, "Skor view", errors, "view_score", 0, 5);
 
@@ -279,8 +277,8 @@ function validateHotelForm(
 
   const baseValues = {
     accessibility,
-    distance_km: 0,
-    location_score: locationScore,
+    distance_km: distanceKM,
+    location_score: 0,
     price,
     rating_facility: ratingFacility,
     view_score: viewScore
@@ -303,9 +301,9 @@ function validateHotelForm(
       price,
       rating_facility: ratingFacility,
       accessibility,
-      distance_km: 0,
+      distance_km: distanceKM,
       google_maps_url: googleMapsURL,
-      location_score: locationScore,
+      location_score: 0,
       view_score: viewScore,
       description,
       criterion_values: criterionValues
@@ -335,7 +333,7 @@ function resolveCriterionPayloadValue(
   criterionForm: CriterionFormState,
   baseValues: Pick<
     SaveHotelPayload,
-    "accessibility" | "location_score" | "price" | "rating_facility" | "view_score"
+    "accessibility" | "distance_km" | "location_score" | "price" | "rating_facility" | "view_score"
   >,
   criterionErrors: CriterionFormErrors
 ) {
@@ -346,6 +344,8 @@ function resolveCriterionPayloadValue(
       return baseValues.rating_facility;
     case "accessibility":
       return baseValues.accessibility;
+    case "distance":
+      return baseValues.distance_km;
     case "location":
       return baseValues.location_score;
     case "view":
@@ -383,23 +383,22 @@ function parseWholeNumber(
   return parsed;
 }
 
-// parseLocationURL memvalidasi input lokasi agar berupa link http atau https.
-function parseLocationURL(value: string, errors: HotelFormErrors) {
+// parseOptionalLocationURL memvalidasi link Google Maps opsional agar berupa URL http atau https.
+function parseOptionalLocationURL(value: string, errors: HotelFormErrors) {
   const normalized = value.trim();
 
   if (!normalized) {
-    errors.google_maps_url = "Lokasi wajib diisi dengan link Google Maps.";
     return "";
   }
 
   try {
     const parsedURL = new URL(normalized);
     if (parsedURL.protocol !== "http:" && parsedURL.protocol !== "https:") {
-      errors.google_maps_url = "Lokasi harus berupa link http atau https.";
+      errors.google_maps_url = "Link Google Maps harus berupa link http atau https.";
       return "";
     }
   } catch {
-    errors.google_maps_url = "Lokasi harus berupa URL valid, contoh https://maps.app.goo.gl/xxxx.";
+    errors.google_maps_url = "Link Google Maps harus berupa URL valid, contoh https://maps.app.goo.gl/xxxx.";
     return "";
   }
 
@@ -472,13 +471,14 @@ function getLegacyCriterionKey(criterion: Criterion) {
   if (code === "C1") return "price";
   if (code === "C2") return "rating";
   if (code === "C3") return "accessibility";
-  if (code === "C4") return "location";
+  if (code === "C4") return "distance";
   if (code === "C5") return "view";
 
   const name = criterion.name.trim().toLowerCase();
   if (name.includes("biaya") || name.includes("harga")) return "price";
   if (name.includes("fasilitas") || name.includes("rating")) return "rating";
   if (name.includes("akses")) return "accessibility";
+  if (name.includes("jarak")) return "distance";
   if (name.includes("lokasi")) return "location";
   if (name.includes("view")) return "view";
 

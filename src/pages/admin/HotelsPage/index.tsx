@@ -291,8 +291,8 @@ function resolveHotelCriterionValue(hotel: Hotel, criterion: Criterion) {
   if (code === "C1" || name.includes("biaya") || name.includes("harga")) return hotel.price;
   if (code === "C2" || name.includes("fasilitas") || name.includes("rating")) return hotel.rating_facility;
   if (code === "C3" || name.includes("akses")) return hotel.accessibility;
-  if (name.includes("jarak")) return hotel.distance_km;
-  if (code === "C4" || name.includes("lokasi")) return hotel.location_score;
+  if (code === "C4" || name.includes("jarak")) return hotel.distance_km;
+  if (name.includes("lokasi")) return hotel.location_score;
   if (code === "C5" || name.includes("view")) return hotel.view_score;
 
   return 0;
@@ -306,5 +306,5 @@ function isMoneyCriterion(criterion: Criterion) {
 
 // isDistanceCriterion mengenali kriteria jarak agar tampil dengan satuan km.
 function isDistanceCriterion(criterion: Criterion) {
-  return criterion.name.trim().toLowerCase().includes("jarak");
+  return criterion.code.trim().toUpperCase() === "C4" || criterion.name.trim().toLowerCase().includes("jarak");
 }

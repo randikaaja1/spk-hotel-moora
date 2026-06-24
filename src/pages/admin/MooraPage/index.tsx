@@ -631,6 +631,13 @@ function formatScoreValue(score: CriterionScore | undefined, mode: "raw" | "norm
     return formatCurrency(score.raw_value);
   }
 
+  if (
+    mode === "raw" &&
+    (score.code.trim().toUpperCase() === "C4" || score.name.trim().toLowerCase().includes("jarak"))
+  ) {
+    return `${formatNumber(score.raw_value, 2)} km`;
+  }
+
   const value =
     mode === "raw"
       ? score.raw_value
