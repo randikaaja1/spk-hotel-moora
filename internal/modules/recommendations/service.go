@@ -334,7 +334,7 @@ func resolveLegacyHotelValue(hotel hotels.Hotel, code string, name string) (floa
 	case "C3":
 		return hotel.Accessibility, nil
 	case "C4":
-		return hotel.LocationScore, nil
+		return hotel.DistanceKM, nil
 	case "C5":
 		return hotel.ViewScore, nil
 	}

@@ -21,9 +21,9 @@ SELECT
         WHEN UPPER(c.code) = 'C1' OR LOWER(c.name) LIKE '%biaya%' OR LOWER(c.name) LIKE '%harga%' THEN h.price
         WHEN UPPER(c.code) = 'C2' OR LOWER(c.name) LIKE '%fasilitas%' OR LOWER(c.name) LIKE '%rating%' THEN h.rating_facility
         WHEN UPPER(c.code) = 'C3' OR LOWER(c.name) LIKE '%akses%' THEN h.accessibility
-        WHEN UPPER(c.code) = 'C4' OR LOWER(c.name) LIKE '%lokasi%' THEN h.location_score
+        WHEN UPPER(c.code) = 'C4' OR LOWER(c.name) LIKE '%jarak%' THEN h.distance_km
         WHEN UPPER(c.code) = 'C5' OR LOWER(c.name) LIKE '%view%' THEN h.view_score
-        WHEN LOWER(c.name) LIKE '%jarak%' THEN h.distance_km
+        WHEN LOWER(c.name) LIKE '%lokasi%' THEN h.location_score
         ELSE 0
     END AS value
 FROM hotels h

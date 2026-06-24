@@ -129,10 +129,10 @@ func buildHotelFromRequest(request SaveHotelRequest, criterionItems []criteria.C
 
 	if name == "" ||
 		hotel.Price <= 0 ||
-		!isValidLocationURL(hotel.GoogleMapsURL) ||
+		(hotel.GoogleMapsURL != "" && !isValidLocationURL(hotel.GoogleMapsURL)) ||
 		!isOptionalScoreInRange(hotel.RatingFacility) ||
 		!isOptionalScoreInRange(hotel.Accessibility) ||
-		hotel.DistanceKM < 0 ||
+		hotel.DistanceKM <= 0 ||
 		!isOptionalScoreInRange(hotel.LocationScore) ||
 		!isOptionalScoreInRange(hotel.ViewScore) {
 		return nil, ErrInvalidHotelPayload
@@ -244,7 +244,7 @@ func legacyCriterionKey(code string, name string) string {
 	case "C3":
 		return "accessibility"
 	case "C4":
-		return "location"
+		return "distance"
 	case "C5":
 		return "view"
 	}
@@ -276,6 +276,8 @@ func isValidCriterionValue(criterion criteria.Criterion, value float64) bool {
 
 	switch legacyCriterionKey(criterion.Code, criterion.Name) {
 	case "price":
+		return value > 0
+	case "distance":
 		return value > 0
 	case "rating", "accessibility", "location", "view":
 		return isScoreInRange(value)
