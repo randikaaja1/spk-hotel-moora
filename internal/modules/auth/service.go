@@ -24,8 +24,8 @@ func NewService(repository *Repository, cfg *config.Config) *Service {
 	}
 }
 
-// Register membuat akun user baru dengan role default user.
-func (s *Service) Register(ctx context.Context, request RegisterRequest) (*UserResponse, error) {
+// Register membuat akun user baru dengan role default user dan langsung menghasilkan JWT.
+func (s *Service) Register(ctx context.Context, request RegisterRequest) (*LoginResponse, error) {
 	name := strings.TrimSpace(request.Name)
 	email := normalizeEmail(request.Email)
 	password := strings.TrimSpace(request.Password)
@@ -65,9 +65,15 @@ func (s *Service) Register(ctx context.Context, request RegisterRequest) (*UserR
 		return nil, err
 	}
 
-	response := createdUser.ToResponse()
+	token, err := security.GenerateToken(createdUser.ID, createdUser.Email, createdUser.Role, s.cfg)
+	if err != nil {
+		return nil, err
+	}
 
-	return &response, nil
+	return &LoginResponse{
+		Token: token,
+		User:  createdUser.ToResponse(),
+	}, nil
 }
 
 // Login memvalidasi email dan password lalu menghasilkan JWT.
