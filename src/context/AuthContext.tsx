@@ -59,13 +59,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return result.user;
   }, []);
 
-  // handleRegister membuat akun baru lalu langsung login agar user tidak masuk dua kali.
+  // handleRegister menyimpan token dari register agar user langsung masuk tanpa login ulang.
   const handleRegister = useCallback(async (payload: RegisterPayload) => {
-    await authService.register(payload);
-    const result = await authService.login({
-      email: payload.email,
-      password: payload.password
-    });
+    const result = await authService.register(payload);
     setStoredToken(result.token);
     setUser(result.user);
     return result.user;

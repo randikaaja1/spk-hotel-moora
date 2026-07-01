@@ -1,10 +1,5 @@
 import { apiRequest } from "./apiClient";
-import type {
-  LoginPayload,
-  LoginResponse,
-  RegisterPayload,
-  User
-} from "../types/auth";
+import type { LoginPayload, LoginResponse, RegisterPayload, User } from "../types/auth";
 
 // login mengirim kredensial dan menerima token JWT beserta profil user.
 export function login(payload: LoginPayload): Promise<LoginResponse> {
@@ -14,9 +9,9 @@ export function login(payload: LoginPayload): Promise<LoginResponse> {
   });
 }
 
-// register membuat akun user baru melalui endpoint public backend.
-export function register(payload: RegisterPayload): Promise<User> {
-  return apiRequest<User>("/auth/register", {
+// register membuat akun user baru dan menerima token JWT dari backend.
+export function register(payload: RegisterPayload): Promise<LoginResponse> {
+  return apiRequest<LoginResponse>("/auth/register", {
     method: "POST",
     body: payload
   });
